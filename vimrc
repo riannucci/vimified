@@ -152,7 +152,6 @@ if count(g:vimified_packages, 'html')
     Bundle 'tpope/vim-haml'
     Bundle 'juvenn/mustache.vim'
     Bundle 'tpope/vim-markdown'
-    Bundle 'Ampersandy/sparkup'
 endif
 " }}}
 
