@@ -35,17 +35,17 @@ endif
 " VUNDLE {{{
 set rtp+=~/.vim/bundle/vundle/
 call vundle#rc()
+Bundle 'gmarik/vundle'
+" }}}
+
+" PACKAGES {{{
 
 " Local vimrc configuration {{{
 let s:extrarc = expand($HOME . '/.vim/extra.vimrc')
 if filereadable(s:extrarc)
     exec ':so ' . s:extrarc
 endif
-
-Bundle 'gmarik/vundle'
 " }}}
-
-" PACKAGES {{{
 
 " _. General {{{
 if count(g:vimified_packages, 'general')
