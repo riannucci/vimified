@@ -24,3 +24,10 @@ let g:SuperTabContextDefaultCompletionType = "<c-x><c-o>"
 let g:SuperTabLongestEnhanced = 1
 let g:SuperTabLongestHighlight = 1
 let g:SuperTabClosePreviewOnPopupClose = 1
+
+" Go find first django_project and do the omnidance :)
+let s:proj_file=findfile(".django_project", ';')
+if !empty(s:proj_file)
+  let $DJANGO_SETTINGS_MODULE=readfile(s:proj_file)[0]
+  python "sys.path.append(os.getcwd())"
+endif
