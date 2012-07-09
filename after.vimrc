@@ -22,6 +22,8 @@ set wildmode=list:longest,full
 
 set tildeop
 
+set foldlevelstart=99
+
 " Undo Space to toggle folds, because it screws with Ack.vim.
 nunmap <Enter>
 vunmap <Enter>
