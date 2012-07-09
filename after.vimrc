@@ -17,6 +17,9 @@ set expandtab
 
 set nowrap
 
+set wildmenu
+set wildmode=list:longest,full
+
 " Undo Space to toggle folds, because it screws with Ack.vim.
 nunmap <Enter>
 vunmap <Enter>
