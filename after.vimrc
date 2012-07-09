@@ -28,7 +28,9 @@ vunmap <Enter>
 
 colorscheme molokai 
 
-let g:ackprg="ack-grep -H --nocolor --nogroup --column"
+if !has('mac') && has('unix')
+  let g:ackprg="ack-grep -H --nocolor --nogroup --column"
+endif
 
 let g:ctrlp_extensions = ['tag', 'buffertag']
 let g:ctrlp_custom_ignore = '\.pyc$'
@@ -54,6 +56,7 @@ if !empty(s:proj_file)
   python "sys.path.append(os.getcwd())"
 endif
 
+" Reset cursor to last pos in file
 function! ResCur()
   if line("'\"") <= line("$")
     normal! g`"
