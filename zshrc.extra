@@ -1,0 +1,5 @@
+bindkey '^?' backward-delete-char
+bindkey -a '/' history-incremental-search-backward
+bindkey -a 'v' edit-command-line
+
+setopt interactivecomments
