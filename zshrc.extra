@@ -3,3 +3,9 @@ bindkey -a '/' history-incremental-search-backward
 bindkey -a 'v' edit-command-line
 
 setopt interactivecomments
+
+if [[ "$TERM" == "xterm" ]]
+then
+  # No it isn't, it's gnome-terminal
+  TERM=xterm-256color
+fi
