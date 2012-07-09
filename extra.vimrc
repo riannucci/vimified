@@ -4,3 +4,8 @@ Bundle "AutoTag"
 Bundle "ervandew/supertab"
 Bundle "othree/xml.vim"
 Bundle "klen/python-mode"
+
+Bundle "MarcWeber/vim-addon-mw-utils"
+Bundle "tomtom/tlib_vim"
+Bundle "honza/snipmate-snippets"
+Bundle "garbas/vim-snipmate"

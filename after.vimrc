@@ -40,14 +40,9 @@ let g:SuperTabLongestEnhanced = 1
 let g:SuperTabLongestHighlight = 1
 let g:SuperTabClosePreviewOnPopupClose = 1
 
-" Django template surround additions
-autocmd FileType htmldjango let b:surround_{char2nr("b")} = "{% block \1block name: \1 %}\r{% endblock \1\1 %}"
-autocmd FileType htmldjango let b:surround_{char2nr("i")} = "{% if \1condition: \1 %}\r{% endif %}"
-autocmd FileType htmldjango let b:surround_{char2nr("w")} = "{% with \1with: \1 %}\r{% endwith %}"
-autocmd FileType htmldjango let b:surround_{char2nr("f")} = "{% for \1for loop: \1 %}\r{% endfor %}"
-autocmd FileType htmldjango let b:surround_{char2nr("c")} = "{% comment %}\r{% endcomment %}"
-autocmd FileType htmldjango inoremap {{ {{  }}<Esc>2hi
-autocmd FileType htmldjango inoremap {% {%  %}<Esc>2hi
+" Backwards is effectively '\<\>', but there seems to be a bug in snips...
+let g:snips_trigger_key = ",."
+let g:snips_trigger_key_backwards = "\<"
 
 " Go find first django_project and do the omnidance :)
 let s:proj_file=findfile(".django_project", ';')
