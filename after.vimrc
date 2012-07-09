@@ -43,6 +43,9 @@ let g:SuperTabClosePreviewOnPopupClose = 1
 " Backwards is effectively '\<\>', but there seems to be a bug in snips...
 let g:snips_trigger_key = ",."
 let g:snips_trigger_key_backwards = "\<"
+let g:snipMate = {}
+let g:snipMate.scope_aliases = {}
+let g:snipMate.scope_aliases['htmldjango'] = 'htmldjango,xhtml,html,javascript'
 
 " Go find first django_project and do the omnidance :)
 let s:proj_file=findfile(".django_project", ';')
