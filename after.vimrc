@@ -26,6 +26,7 @@ colorscheme molokai
 let g:ackprg="ack-grep -H --nocolor --nogroup --column"
 
 let g:ctrlp_extensions = ['tag', 'buffertag']
+let g:ctrlp_custom_ignore = '\.pyc$'
 
 let g:SuperTabDefaultCompletionType = "context"
 let g:SuperTabLongestEnhanced = 1
