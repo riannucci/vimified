@@ -378,6 +378,8 @@ nnoremap <silent> <leader>h3 :execute '3match InterestingWord3 /\<<c-r><c-w>\>/'
 
 " }}}
 
+" Navigation & UI {{{
+
 " Begining & End of line in Normal mode 
 noremap H ^
 noremap L g_
@@ -479,10 +481,6 @@ let g:miniBufExplVSplit = 25
 let g:miniBufExplorerMoreThanOne = 100
 let g:miniBufExplUseSingleClick = 1
 nmap <Leader>b :MiniBufExplorer<cr>
-
-
-" Fugitive
-
 
 " }}}
 
