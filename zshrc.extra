@@ -11,7 +11,10 @@ then
   TERM=xterm-256color
 fi
 
-eval $( gdircolors -b ~/vimified/LS_COLORS/LS_COLORS )
-
-alias ls='gls --color=auto'
+if which gdircolors > /dev/null
+then
+  alias dircolors=gdircolors
+  alias ls='gls --color=auto'
+fi
+eval $( dircolors -b ~/vimified/LS_COLORS/LS_COLORS )
 
