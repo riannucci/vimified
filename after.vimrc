@@ -45,7 +45,7 @@ vmap <S-Right> <Right>
 
 colorscheme molokai 
 
-if !has('mac') && has('unix')
+if !has('mac') && !has('win32unix') && has('unix')
   let g:ackprg="ack-grep -H --nocolor --nogroup --column"
 endif
 
