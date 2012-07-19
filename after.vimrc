@@ -28,6 +28,21 @@ set foldlevelstart=99
 nunmap <Enter>
 vunmap <Enter>
 
+" Shift-arrows work like you would kinda expect them to :)
+imap <S-Up>    <esc>v<Up>
+imap <S-Down>  <esc>v<Down>
+imap <S-Left>  <esc>v<Left>
+imap <S-Right> <esc>v<Right>
+nmap <S-Up>    v<Up>
+nmap <S-Down>  v<Down>
+nmap <S-Left>  v<Left>
+nmap <S-Right> v<Right>
+vmap <S-Up>    <Up>
+vmap <S-Down>  <Down>
+vmap <S-Left>  <Left>
+vmap <S-Right> <Right>
+
+
 colorscheme molokai 
 
 if !has('mac') && has('unix')
