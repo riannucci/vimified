@@ -1,0 +1,73 @@
+#!/usr/bin/python
+
+# This is a simple wrapper intended for use with the --diff-cmd argument of
+# 'svn diff' (or indeed 'svndiff') and uses gvimiff as the diffing tool.
+# It makes Vim name the buffers according to what Subversion passes in
+# as the names for the files. This may look like
+#   file.c	(.../trunk/file.c)	(revision 72)
+# Note the tabs and slashes. Both confuse Vim, so we replace whitespace by
+# regular spaces and slashes by backslashes.
+# Also, we ensure that we get nice syntax highlighting in Vim by creating
+# symlinks with appropriate extensions to the temp files we are given.
+# The easiest way to use this script is by setting
+#   diff-cmd = svndiff_helper
+# in section [helpers] in your ~/.subversion/config.
+
+import os
+import os.path
+import re
+
+
+def lntemp(f, n):
+    fn = n.split('\t')[0]
+    ext = os.path.splitext(fn)[1]
+    if ext not in ("", os.path.splitext(f)[1]):
+        tmpfn = f + ext
+        os.symlink(os.path.basename(f), tmpfn)
+        return tmpfn
+    else:
+      return f
+
+
+def sanitize(n):
+  return
+
+
+def main():
+  import sys
+  import subprocess
+
+  n1, n2 = sys.argv[3], sys.argv[5]
+  f1, f2 = sys.argv[6], sys.argv[7]
+
+  lf1 = lntemp(f1, n1)
+  lf2 = lntemp(f2, n2)
+
+  print f1, f2
+
+  sf1 = re.sub(r'\s+', r'\ ', n1)
+  sf2 = re.sub(r'\s+', r'\ ', n2)
+
+  ef2 = n2.split('\t')[0]
+
+  try:
+    vim_rc = subprocess.call(['vim', '-df',
+      '-c', "au BufReadPost " + lf2 + " silent f " + sf2,
+      '-c', "au BufWritePre " + sf2 + " silent f " + ef2,
+      '-c', "au BufWritePost " + ef2 + " silent f " + sf2,
+      '-c', "au BufReadPost " + lf1 + " silent f " + sf1 + " |set readonly",
+      lf2, lf1])
+  except Exception, ex:
+    print ex
+  finally:
+    if lf1 != f1:
+      os.remove(lf1)
+
+    if lf2 != f2:
+      os.remove(lf2)
+
+  sys.exit(vim_rc)
+
+
+if __name__ == '__main__':
+  main()
