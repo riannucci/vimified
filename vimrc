@@ -40,7 +40,7 @@ Bundle 'gmarik/vundle'
 
 " PACKAGES {{{
 
-" Local vimrc configuration {{{
+" Install user-supplied Bundles {{{
 let s:extrarc = expand($HOME . '/.vim/extra.vimrc')
 if filereadable(s:extrarc)
     exec ':so ' . s:extrarc
