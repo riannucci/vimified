@@ -76,8 +76,12 @@ let g:snipMate = {}
 let g:snipMate.scope_aliases = {}
 let g:snipMate.scope_aliases['htmldjango'] = 'htmldjango,xhtml,html,javascript'
 
+let g:syntastic_python_checker_args = '--ignore=E111,E128,E121'
+
 let g:pymode_options_indent = 0
-let g:pymode_lint_checker = 'pyflakes'
+
+" Let syntastic handle linting
+let g:pymode_lint_write = 0
 
 " Go find first django_project and do the omnidance :)
 let s:proj_file=findfile(".django_project", ';')
