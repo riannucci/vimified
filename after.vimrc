@@ -24,9 +24,21 @@ set tildeop
 
 set foldlevelstart=99
 
+" For tagbar to update highlighted element faster
+set ut=1000
+
+" Search upwards until there's a tags file
+set tags+=./tags;
+
 " Undo Space to toggle folds, because it screws with Ack.vim.
 nunmap <Enter>
 vunmap <Enter>
+
+" Tagbar mapping interferes with Align
+nunmap <Leader>t
+nmap   <Leader>, :TagbarToggle<CR>
+let g:tagbar_autoclose=1
+
 
 " Shift-arrows work like you would kinda expect them to :)
 imap <S-Up>    <esc>v<Up>
