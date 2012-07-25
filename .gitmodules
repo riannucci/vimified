@@ -3,4 +3,4 @@
 	url = https://github.com/gmarik/vundle.git
 [submodule "LS_COLORS"]
 	path = LS_COLORS
-	url = git://github.com/trapd00r/LS_COLORS.git
+	url = git@github.com:riannucci/LS_COLORS.git
