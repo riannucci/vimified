@@ -1,2 +1,3 @@
 --type-set=gyp=.gyp,.gypi
 --type-set=ninja=.ninja
+--type-set=msvs=.sln,.rules,.vcxproj
