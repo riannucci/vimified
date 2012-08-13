@@ -34,6 +34,8 @@ set tags+=./tags;
 nunmap <Enter>
 vunmap <Enter>
 
+nunmap ;
+
 " Tagbar mapping interferes with Align
 nunmap <Leader>t
 nmap   <Leader>, :TagbarToggle<CR>
