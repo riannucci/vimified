@@ -104,3 +104,8 @@ augroup resCur
   autocmd!
   autocmd BufWinEnter * call ResCur()
 augroup END
+
+
+for f in split(glob('~/.vim/syntax_checkers/*.vim'), '\n')
+      exe 'source' f
+endfor
