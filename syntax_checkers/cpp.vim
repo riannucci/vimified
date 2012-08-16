@@ -4,7 +4,6 @@ if !exists('g:syntastic_cpp_linter')
 endif
 
 if !executable(g:syntastic_cpp_linter)
-  echo "Linter isn't executable!"
   finish
 endif
 
