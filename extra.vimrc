@@ -2,7 +2,10 @@ Bundle "bronson/vim-visual-star-search"
 Bundle "AutoTag"
 Bundle "ervandew/supertab"
 Bundle "othree/xml.vim"
-Bundle "klen/python-mode"
+
+if has("python")
+  Bundle "klen/python-mode"
+endif
 
 Bundle "MarcWeber/vim-addon-mw-utils"
 Bundle "tomtom/tlib_vim"
