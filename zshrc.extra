@@ -24,3 +24,8 @@ then
 fi
 
 export ACK_PAGER_COLOR='less -R'
+
+alias l='ls -lX'
+alias ll='ls -laX'
+
+export EDITOR=vim
