@@ -87,6 +87,9 @@ let g:pymode_rope = 0
 " Let syntastic handle linting
 let g:pymode_lint_write = 0
 
+" Strip tagfiles up to 64MB
+let g:autotagmaxTagsFileSize = 1024*1024*64
+
 " Go find first django_project and do the omnidance :)
 let s:proj_file=findfile(".django_project", ';')
 if !empty(s:proj_file)
