@@ -30,6 +30,8 @@ set ut=1000
 " Search upwards until there's a tags file
 set tags+=./tags;
 
+set mouse=a
+
 " Undo Space to toggle folds, because it screws with Ack.vim.
 nunmap <Enter>
 vunmap <Enter>
