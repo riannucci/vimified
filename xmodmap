@@ -10,4 +10,5 @@ keycode 17 = asterisk 8
 keycode 18 = parenleft 9
 keycode 19 = parenright 0
 
-keycode 33 = colon semicolon
+keycode 47 = colon semicolon
+keycode 108 = Escape
