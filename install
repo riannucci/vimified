@@ -1,0 +1,35 @@
+#!/usr/bin/zsh -x
+cd
+if [[ ! -d vimified ]]
+then
+  git clone --recursive git@github.com:riannucci/vimified.git
+fi
+curl -L https://github.com/robbyrussell/oh-my-zsh/raw/master/tools/install.sh | sh
+( mkdir -p .oh-my-zsh/custom/plugins &&
+  cd .oh-my-zsh/custom/plugins &&
+  git clone git://github.com/zsh-users/zsh-syntax-highlighting.git )
+
+ln -sf vimified .vim
+ln -sf vimified/vimrc .vimrc
+ln -sf vimified/xmodmap .xmodmap
+
+vim +BundleInstall +qa
+
+ex .zshrc <<EOH
+0
+/^plugins
+if line('.') == 1
+  q
+endif
+c
+source ~/vimified/zshrc.plugins
+.
+$
+a
+source ~/vimified/zshrc.extra
+.
+wq
+EOH
+
+git config --global user.name "Robert A. Iannucci Jr."
+git config --global user.email robbie@rail.com
