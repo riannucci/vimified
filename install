@@ -12,6 +12,7 @@ curl -L https://github.com/robbyrussell/oh-my-zsh/raw/master/tools/install.sh | 
 ln -sf vimified .vim
 ln -sf vimified/vimrc .vimrc
 ln -sf vimified/xmodmap .xmodmap
+ln -sf vimified/ackrc .ackrc
 
 vim +BundleInstall +qa
 
