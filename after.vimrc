@@ -24,6 +24,8 @@ set tildeop
 
 set foldlevelstart=99
 
+set guifont=DejaVu_Sans_Mono_for_Powerline:h11:cANSI
+
 " For tagbar to update highlighted element faster
 set ut=1000
 
@@ -116,3 +118,5 @@ augroup END
 for f in split(glob('~/.vim/syntax_checkers/*.vim'), '\n')
       exe 'source' f
 endfor
+
+set rtp+=~/.vim
