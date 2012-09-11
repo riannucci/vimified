@@ -209,7 +209,6 @@ if count(g:vimified_packages, 'color')
     Bundle 'w0ng/vim-hybrid'
 endif
 " }}}
-" }}}
 
 " }}}
 
