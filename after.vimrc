@@ -1,6 +1,6 @@
-set tabstop=2 
+set tabstop=2
 set textwidth=80
-set shiftwidth=2 
+set shiftwidth=2
 set softtabstop=2
 
 " Stop the crazy margins :D
@@ -61,7 +61,8 @@ vmap <S-Left>  <Left>
 vmap <S-Right> <Right>
 
 
-colorscheme molokai 
+" Let's stick with hybrid for now
+" colorscheme molokai
 
 if !has('mac') && !has('win32unix') && has('unix')
   let g:ackprg="ack-grep -H --nocolor --nogroup --column"
