@@ -121,3 +121,8 @@ for f in split(glob('~/.vim/syntax_checkers/*.vim'), '\n')
 endfor
 
 set rtp+=~/.vim
+
+if has('win32')
+    " Maximize, baby!
+    autocmd GUIEnter * simalt ~X
+endif
