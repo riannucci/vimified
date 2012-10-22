@@ -63,6 +63,7 @@ vmap <S-Right> <Right>
 
 " Let's stick with hybrid for now
 " colorscheme molokai
+hi! Operator guifg=#cc6666 ctermfg=9 guibg=NONE ctermbg=NONE gui=NONE term=NONE
 
 if !has('mac') && !has('win32unix') && has('unix')
   let g:ackprg="ack-grep -H --nocolor --nogroup --column"
