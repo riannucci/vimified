@@ -22,3 +22,5 @@ map <C-M> :call DWM_Full()<CR>
 map <C-J> <C-W>w
 map <C-K> <C-W>W
 Bundle "spolu/dwm.vim"
+
+Bundle "a.vim"
