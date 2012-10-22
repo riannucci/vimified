@@ -127,3 +127,5 @@ if has('win32')
     " Maximize, baby!
     autocmd GUIEnter * simalt ~X
 endif
+
+au! BufRead,BufNewFile *.ninja set filetype=ninja
