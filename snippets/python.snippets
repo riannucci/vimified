@@ -9,3 +9,12 @@ snippet main
 
 	if __name__ == '__main__':
 	  main()
+snippet mainr
+	import sys
+
+	def main(argv):
+	  ${1}
+	  return 0
+
+	if __name__ == '__main__':
+	  sys.exit(main(sys.argv))
