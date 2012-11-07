@@ -31,4 +31,3 @@ alias ll='ls -laX'
 export EDITOR=vim
 
 . <(ssh-agent)
-ssh-add
