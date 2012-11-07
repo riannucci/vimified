@@ -1,4 +1,4 @@
 --type-set=gyp=.gyp,.gypi
 --type-set=ninja=.ninja
 --type-set=msvs=.sln,.rules,.vcproj,.vcxproj,.props,.targets
---type-set=buildbot=.py,.tac
+--type-set=buildbot=.py,.tac,.cfg
