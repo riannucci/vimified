@@ -2,6 +2,7 @@ set tabstop=2
 set textwidth=80
 set shiftwidth=2
 set softtabstop=2
+set smarttab
 
 " Stop the crazy margins :D
 set numberwidth=2
@@ -129,3 +130,6 @@ if has('win32')
 endif
 
 au! BufRead,BufNewFile *.ninja set filetype=ninja
+
+filetype on
+filetype plugin indent on
