@@ -1,0 +1,10 @@
+# vim: ft=gitconfig:
+[user]
+	name = Robert Iannucci
+[core]
+	autocrlf = false
+	filemode = false
+[color]
+  ui = true
+[alias]
+  udiff = !git diff $(git config branch.$(git rev-parse --abbrev-ref HEAD).merge)¬
