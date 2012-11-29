@@ -9,5 +9,5 @@
 [alias]
   udiff = !git diff $(git merge-base HEAD $(git config branch.$(git rev-parse --abbrev-ref HEAD).merge))
   map = log --graph --full-history --all --color --date=short --pretty=format:'%x1b[31m%h%x09%x1b[32m%d%x1b[0m%x20%ad %s'
-  bclean = !git branch --merged | awk '!/master/{print $NF}' | xargs git branch -d
+  bclean = !git branch --merged master | awk '!/master/{print $NF}' | xargs git branch -d
   reup = !~/.vim/gitscripts/rebase_all.py
