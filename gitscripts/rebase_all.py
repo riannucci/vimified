@@ -6,7 +6,7 @@ import sys
 # Exception classes used by this module.
 class CalledProcessError(Exception):
   def __init__(self, returncode, cmd, output=None, out_err=None):
-    super(CalledProcessError).__init__(self)
+    super(CalledProcessError, self).__init__()
     self.returncode = returncode
     self.cmd = cmd
     self.output = output
