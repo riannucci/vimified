@@ -130,6 +130,14 @@ if has('win32')
 endif
 
 au! BufRead,BufNewFile *.ninja set filetype=ninja
+au! BufWritePost *.py,*.sh silent call s:FixExecutable()
+function s:FixExecutable()
+  if strpart(getline(1), 0, 2) == '#!'
+    !chmod +x %
+  else
+    !chmod -x %
+  endif
+endfunction
 
 filetype on
 filetype plugin indent on
