@@ -2,4 +2,4 @@
 
 ZSH_HIGHLIGHT_HIGHLIGHTERS=(main brackets pattern cursor)
 
-plugins=(git github python fasd brew vi-mode vundle encode64 zsh-syntax-highlighting)
+plugins=(github python fasd brew vi-mode vundle encode64 zsh-syntax-highlighting)
