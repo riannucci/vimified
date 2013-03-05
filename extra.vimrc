@@ -24,3 +24,5 @@ map <C-K> <C-W>W
 Bundle "spolu/dwm.vim"
 
 Bundle "a.vim"
+
+Bundle "airblade/vim-gitgutter"
