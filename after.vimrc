@@ -141,3 +141,4 @@ endfunction
 
 filetype on
 filetype plugin indent on
+au FileType python set ts=2 sts=2 sw=2
