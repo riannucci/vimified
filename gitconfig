@@ -16,3 +16,5 @@
   thaw   =  !((git log --pretty=%s -n1 | grep FREEZE -q) && git reset 'HEAD~') || echo 'Nothing to thaw.'
 [credential]
 	helper = osxkeychain
+[push]
+	default = simple
