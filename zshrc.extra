@@ -2,6 +2,9 @@ bindkey '^?' backward-delete-char
 bindkey -a '/' history-incremental-search-backward
 bindkey -a 'v' edit-command-line
 
+bindkey -M viins "${terminfo[kcuu1]/O/[}" up-line-or-history
+bindkey -M viins "${terminfo[kcud1]/O/[}" down-line-or-history
+
 setopt interactivecomments
 setopt extended_glob
 
