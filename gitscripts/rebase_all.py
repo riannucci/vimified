@@ -2,6 +2,8 @@
 import subprocess
 import sys
 
+from pprint import pprint
+
 
 # Exception classes used by this module.
 class CalledProcessError(Exception):
@@ -32,47 +34,54 @@ def check_output(*popenargs, **kwargs):
   return output
 
 
-def run(cmd):
+def run(*cmd):
+  cmd = ('git',) + cmd
   if '--verbose' in sys.argv:
     print cmd
   return check_output(cmd).strip()
 
 
 def main():
-  orig_branch = run(('git', 'rev-parse', '--abbrev-ref', 'HEAD'))
+  orig_branch = run('rev-parse', '--abbrev-ref', 'HEAD')
   if orig_branch == 'HEAD':
-    orig_branch = run(('git', 'rev-parse', 'HEAD'))
-  run(('git', 'checkout', 'master'))
+    orig_branch = run('rev-parse', 'HEAD')
+  run('checkout', 'master')
   branch_tree = {}
-  for branch in [b for b in run(('git', 'branch')).split() if '*' not in b]:
+  for branch in [b for b in run('branch').split() if '*' not in b]:
     # only local branches
     try:
-      remote = run(('git', 'config', 'branch.'+branch+'.remote'))
+      remote = run('config', 'branch.'+branch+'.remote')
       if remote != '.':
         continue
     except CalledProcessError:
       continue
 
     try:
-      parent = run(('git', 'config', 'branch.'+branch+'.merge'))
-      parent = run(('git', 'rev-parse', '--abbrev-ref', parent))
+      parent = run('config', 'branch.'+branch+'.merge')
+      parent = run('rev-parse', '--abbrev-ref', parent)
     except CalledProcessError:
       parent = None
     branch_tree[branch] = parent
 
+  starting_refs = dict((b, run('merge-base', p, b))
+                       for b, p in branch_tree.items())
+  if '--verbose' in sys.argv:
+    pprint(branch_tree)
+    pprint(starting_refs)
+
   # XXX There is a more efficient way to do this, but for now...
   while branch_tree:
-    for branch in (b for b, p in branch_tree.items() if p not in branch_tree):
-      run(('git', 'checkout', branch))
+    this_pass = [i for i in branch_tree.items() if i[1] not in branch_tree]
+    for branch, parent in this_pass:
       try:
-        run(('git', 'rebase'))
+        run('rebase', '--onto', parent, starting_refs[branch], branch)
       except CalledProcessError as ex:
         print ex.output
         print ex.out_err
         raise
       del branch_tree[branch]
 
-  run(('git', 'checkout', orig_branch))
+  run('checkout', orig_branch)
 
   return 0
 
