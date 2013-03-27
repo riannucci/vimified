@@ -34,14 +34,23 @@ def check_output(*popenargs, **kwargs):
   return output
 
 
-def run(*cmd):
+def run(*cmd, **kwargs):
   cmd = ('git',) + cmd
   if '--verbose' in sys.argv:
     print cmd
-  return check_output(cmd).strip()
+  return check_output(cmd, **kwargs).strip()
+
+
+def clean_refs():
+  tags = [t.strip() for t in run('tag', '-l', 'reup.*').split()]
+  run('tag', '-d', *tags)
 
 
 def main():
+  if '--clean' in sys.argv:
+    clean_refs()
+    return 0
+
   orig_branch = run('rev-parse', '--abbrev-ref', 'HEAD')
   if orig_branch == 'HEAD':
     orig_branch = run('rev-parse', 'HEAD')
@@ -63,8 +72,20 @@ def main():
       parent = None
     branch_tree[branch] = parent
 
-  starting_refs = dict((b, run('merge-base', p, b))
-                       for b, p in branch_tree.items())
+  starting_refs = {}
+  for branch, parent in branch_tree.iteritems():
+    tag = "reup.merge_base_for_%s" % run('rev-parse', branch)
+    tagval = None
+    try:
+      tagval = run('rev-parse', tag, stderr=subprocess.PIPE)
+      print 'Found previous merge-base for %s: %s' % (branch, tagval)
+    except CalledProcessError:
+      pass
+    if not tagval:
+      run('tag', '-m', tag, tag, run('merge-base', parent, branch))
+      tagval = run('rev-parse', tag)
+    starting_refs[branch] = tagval
+
   if '--verbose' in sys.argv:
     pprint(branch_tree)
     pprint(starting_refs)
@@ -80,6 +101,8 @@ def main():
         print ex.out_err
         raise
       del branch_tree[branch]
+
+  clean_refs()
 
   run('checkout', orig_branch)
 
