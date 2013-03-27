@@ -1,9 +1,9 @@
 # vim: ft=gitconfig:
 [user]
-	name = Robert Iannucci
+  name = Robert Iannucci
 [core]
-	autocrlf = false
-	filemode = false
+  autocrlf = false
+  filemode = false
 [color]
   ui = true
 [alias]
@@ -15,6 +15,6 @@
   freeze =  commit -am 'FREEZE'
   thaw   =  !((git log --pretty=%s -n1 | grep FREEZE -q) && git reset 'HEAD~') || echo 'Nothing to thaw.'
 [credential]
-	helper = osxkeychain
+  helper = osxkeychain
 [push]
-	default = simple
+  default = simple
