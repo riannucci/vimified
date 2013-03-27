@@ -35,10 +35,6 @@ set tags+=./tags;
 
 set mouse=a
 
-" Undo Space to toggle folds, because it screws with Ack.vim.
-nunmap <Enter>
-vunmap <Enter>
-
 nunmap ;
 
 " Tagbar mapping interferes with Align
