@@ -36,6 +36,10 @@ set tags+=./tags;
 set mouse=a
 
 nunmap ;
+nunmap <C-h>
+nunmap <C-j>
+nunmap <C-k>
+nunmap <C-l>
 
 " Tagbar mapping interferes with Align
 nunmap <Leader>t
