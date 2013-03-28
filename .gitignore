@@ -1,5 +1,6 @@
-bundle/
+*.pyc
 *.swp
-tmp/
 .DS_Store
+bundle/
 tags
+tmp/
