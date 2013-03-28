@@ -142,3 +142,7 @@ endfunction
 filetype on
 filetype plugin indent on
 au FileType python set ts=2 sts=2 sw=2
+
+if executable('/usr/local/bin/git')
+  let g:fugitive_git_executable='/usr/local/bin/git'
+endif
