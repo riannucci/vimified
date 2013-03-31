@@ -3,47 +3,11 @@ import subprocess
 import sys
 
 from pprint import pprint
-
-
-# Exception classes used by this module.
-class CalledProcessError(Exception):
-  def __init__(self, returncode, cmd, output=None, out_err=None):
-    super(CalledProcessError, self).__init__()
-    self.returncode = returncode
-    self.cmd = cmd
-    self.output = output
-    self.out_err = out_err
-
-  def __str__(self):
-    return (
-        'Command "%s" returned non-zero exit status %d' %
-        (self.cmd, self.returncode))
-
-
-def check_output(*popenargs, **kwargs):
-  if 'stdout' in kwargs:
-    raise ValueError('stdout argument not allowed, it will be overridden.')
-  process = subprocess.Popen(stdout=subprocess.PIPE, *popenargs, **kwargs)
-  output, out_err = process.communicate()
-  retcode = process.poll()
-  if retcode:
-    cmd = kwargs.get('args')
-    if cmd is None:
-      cmd = popenargs[0]
-    raise CalledProcessError(retcode, cmd, output=output, out_err=out_err)
-  return output
-
-
-def run(*cmd, **kwargs):
-  cmd = ('git',) + cmd
-  if '--verbose' in sys.argv:
-    print cmd
-  return check_output(cmd, **kwargs).strip()
-
+from common import CalledProcessError, run_git, VERBOSE, abbrev
 
 def clean_refs():
-  tags = [t.strip() for t in run('tag', '-l', 'reup.*').split()]
-  run('tag', '-d', *tags)
+  tags = [t.strip() for t in run_git('tag', '-l', 'reup.*').split()]
+  run_git('tag', '-d', *tags)
 
 
 def main():
@@ -51,42 +15,42 @@ def main():
     clean_refs()
     return 0
 
-  orig_branch = run('rev-parse', '--abbrev-ref', 'HEAD')
+  orig_branch = abbrev('HEAD')
   if orig_branch == 'HEAD':
-    orig_branch = run('rev-parse', 'HEAD')
-  run('checkout', 'master')
+    orig_branch = run_git('rev-parse', 'HEAD')
+  run_git('checkout', 'master')
   branch_tree = {}
-  for branch in [b for b in run('branch').split() if '*' not in b]:
+  for branch in [b for b in run_git('branch').split() if '*' not in b]:
     # only local branches
     try:
-      remote = run('config', 'branch.'+branch+'.remote')
+      remote = run_git('config', 'branch.'+branch+'.remote')
       if remote != '.':
         continue
     except CalledProcessError:
       continue
 
     try:
-      parent = run('config', 'branch.'+branch+'.merge')
-      parent = run('rev-parse', '--abbrev-ref', parent)
+      parent = run_git('config', 'branch.'+branch+'.merge')
+      parent = abbrev(parent)
     except CalledProcessError:
       parent = None
     branch_tree[branch] = parent
 
   starting_refs = {}
   for branch, parent in branch_tree.iteritems():
-    tag = "reup.merge_base_for_%s" % run('rev-parse', branch)
+    tag = "reup.merge_base_for_%s" % run_git('rev-parse', branch)
     tagval = None
     try:
-      tagval = run('rev-parse', tag, stderr=subprocess.PIPE)
+      tagval = run_git('rev-parse', tag, stderr=subprocess.PIPE)
       print 'Found previous merge-base for %s: %s' % (branch, tagval)
     except CalledProcessError:
       pass
     if not tagval:
-      run('tag', '-m', tag, tag, run('merge-base', parent, branch))
-      tagval = run('rev-parse', tag)
+      run_git('tag', '-m', tag, tag, run_git('merge-base', parent, branch))
+      tagval = run_git('rev-parse', tag)
     starting_refs[branch] = tagval
 
-  if '--verbose' in sys.argv:
+  if VERBOSE:
     pprint(branch_tree)
     pprint(starting_refs)
 
@@ -95,7 +59,7 @@ def main():
     this_pass = [i for i in branch_tree.items() if i[1] not in branch_tree]
     for branch, parent in this_pass:
       try:
-        run('rebase', '--onto', parent, starting_refs[branch], branch)
+        run_git('rebase', '--onto', parent, starting_refs[branch], branch)
       except CalledProcessError as ex:
         print ex.output
         print ex.out_err
@@ -104,7 +68,7 @@ def main():
 
   clean_refs()
 
-  run('checkout', orig_branch)
+  run_git('checkout', orig_branch)
 
   return 0
 
