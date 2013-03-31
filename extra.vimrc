@@ -17,3 +17,7 @@ Bundle "a.vim"
 Bundle "airblade/vim-gitgutter"
 
 Bundle "Lokaltog/vim-distinguished"
+
+if !has('win32')
+  Bundle "Valloric/YouCompleteMe"
+endif
