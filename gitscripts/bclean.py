@@ -35,7 +35,8 @@ def main():
     for down in downstreams[branch]:
       if down not in merged:
         run_git('branch', '--set-upstream-to', upstreams[branch], down)
-        print 'Reparented %s to track %s' % (down, upstreams[branch])
+        print ('Reparented %s to track %s (was tracking %s)'
+               % (down, upstreams[branch], branch))
     print run_git('branch', '-d', branch)
 
   return 0
