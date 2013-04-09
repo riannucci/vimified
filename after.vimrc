@@ -117,6 +117,8 @@ augroup resCur
   autocmd BufWinEnter * call ResCur()
 augroup END
 
+" auto-close the python preview pane
+autocmd InsertLeave * if pumvisible() == 0|pclose|endif
 
 for f in split(glob('~/.vim/syntax_checkers/*.vim'), '\n')
       exe 'source' f
@@ -125,8 +127,8 @@ endfor
 set rtp+=~/.vim
 
 if has('win32')
-    " Maximize, baby!
-    autocmd GUIEnter * simalt ~X
+  " Maximize, baby!
+  autocmd GUIEnter * simalt ~X
 endif
 
 au! BufRead,BufNewFile *.ninja set filetype=ninja

@@ -4,3 +4,4 @@
 bundle/
 tags
 tmp/
+byobu/.ssh-agent
