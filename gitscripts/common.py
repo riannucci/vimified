@@ -3,6 +3,8 @@ import sys
 
 VERBOSE = '--verbose' in sys.argv
 
+NO_BRANCH = '* (no branch)'
+
 # Exception classes used by this module.
 class CalledProcessError(Exception):
   def __init__(self, returncode, cmd, output=None, out_err=None):
@@ -19,9 +21,9 @@ class CalledProcessError(Exception):
 
 
 def check_output(*popenargs, **kwargs):
-  if 'stdout' in kwargs:
-    raise ValueError('stdout argument not allowed, it will be overridden.')
-  process = subprocess.Popen(stdout=subprocess.PIPE, *popenargs, **kwargs)
+  kwargs.setdefault('stdout', subprocess.PIPE)
+  kwargs.setdefault('stderr', subprocess.PIPE)
+  process = subprocess.Popen(*popenargs, **kwargs)
   output, out_err = process.communicate()
   retcode = process.poll()
   if retcode:
@@ -36,7 +38,25 @@ def run_git(*cmd, **kwargs):
   cmd = ('git',) + cmd
   if VERBOSE:
     print cmd
-  return check_output(cmd, **kwargs).strip()
+  ret = check_output(cmd, **kwargs)
+  ret = (ret or '').strip()
+  return ret
+
 
 def abbrev(ref):
   return run_git('rev-parse', '--abbrev-ref', ref)
+
+
+def upstream(branch):
+  try:
+    return run_git('rev-parse', '--abbrev-ref', '--symbolic-full-name',
+                   branch+'@{upstream}')
+  except CalledProcessError:
+    return None
+
+
+def branches(*args):
+  for line in run_git('branch', *args).splitlines():
+    if line == NO_BRANCH:
+      continue
+    yield line.split()[-1]

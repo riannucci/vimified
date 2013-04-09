@@ -1,29 +1,23 @@
 #!/usr/bin/env python
-#git branch --merged master | awk '!/\\<master\\>/{print $NF}' | xargs git branch -d
-
 import sys
 import collections
 
-from common import run_git, VERBOSE, CalledProcessError, abbrev
+from common import run_git, VERBOSE, CalledProcessError, abbrev, upstream
+from common import branches
 
 def main():
-  all_branches = [x.split()[-1] for x in run_git('branch').splitlines()]
-  merged_raw = run_git('branch', '--merged', 'master').splitlines()
-  merged = [x.split()[-1] for x in merged_raw if 'master' not in x]
+  merged = list(branches('--merged', 'origin/master'))
+
   if VERBOSE:
-    print all_branches
     print merged
 
   upstreams = {}
   downstreams = collections.defaultdict(list)
-  for branch in all_branches:
+  for branch in branches():
     try:
-      remote = run_git('config', 'branch.%s.remote' % branch)
-      if remote != '.':
-        continue
-      upstream = abbrev(run_git('config', 'branch.%s.merge' % branch))
-      upstreams[branch] = upstream
-      downstreams[upstream].append(branch)
+      parent = upstream(branch)
+      upstreams[branch] = parent
+      downstreams[parent].append(branch)
     except CalledProcessError:
       pass
 
@@ -31,6 +25,9 @@ def main():
     print upstreams
     print downstreams
 
+  current = abbrev('HEAD')
+  if current in merged:
+    run_git('checkout', 'origin/master')
   for branch in merged:
     for down in downstreams[branch]:
       if down not in merged:

@@ -1,9 +1,9 @@
 #!/usr/bin/python
-import subprocess
 import sys
 
 from pprint import pprint
-from common import CalledProcessError, run_git, VERBOSE, abbrev
+from common import CalledProcessError, run_git, VERBOSE, abbrev, upstream
+from common import branches
 
 def clean_refs():
   tags = [t.strip() for t in run_git('tag', '-l', 'reup.*').split()]
@@ -18,22 +18,14 @@ def main():
   orig_branch = abbrev('HEAD')
   if orig_branch == 'HEAD':
     orig_branch = run_git('rev-parse', 'HEAD')
-  run_git('checkout', 'master')
-  branch_tree = {}
-  for branch in [b for b in run_git('branch').split() if '*' not in b]:
-    # only local branches
-    try:
-      remote = run_git('config', 'branch.'+branch+'.remote')
-      if remote != '.':
-        continue
-    except CalledProcessError:
-      continue
 
-    try:
-      parent = run_git('config', 'branch.'+branch+'.merge')
-      parent = abbrev(parent)
-    except CalledProcessError:
-      parent = None
+  run_git('fetch', 'origin', stderr=None)
+  branch_tree = {}
+  for branch in branches():
+    parent = upstream(branch)
+    if not parent:
+      print 'Skipping %s: No upstream specified' % branch
+      continue
     branch_tree[branch] = parent
 
   starting_refs = {}
@@ -41,7 +33,7 @@ def main():
     tag = "reup.merge_base_for_%s" % run_git('rev-parse', branch)
     tagval = None
     try:
-      tagval = run_git('rev-parse', tag, stderr=subprocess.PIPE)
+      tagval = run_git('rev-parse', tag)
       print 'Found previous merge-base for %s: %s' % (branch, tagval)
     except CalledProcessError:
       pass
@@ -55,9 +47,11 @@ def main():
     pprint(starting_refs)
 
   # XXX There is a more efficient way to do this, but for now...
+  # TODO(iannucci): See if squashed branch is a perfect fit.
   while branch_tree:
     this_pass = [i for i in branch_tree.items() if i[1] not in branch_tree]
     for branch, parent in this_pass:
+      print 'Rebasing:', branch
       try:
         run_git('rebase', '--onto', parent, starting_refs[branch], branch)
       except CalledProcessError as ex:
