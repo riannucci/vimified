@@ -20,3 +20,12 @@ snippet mainr
 
 	if __name__ == '__main__':
 	  sys.exit(main(sys.argv))
+
+snippet mainu
+	import unittest
+
+	class Test${1}(unittest.TestCase):
+	  pass
+
+	if __name__ == '__main__':
+	  unittest.main()
