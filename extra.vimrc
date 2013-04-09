@@ -16,6 +16,8 @@ Bundle "a.vim"
 
 Bundle "airblade/vim-gitgutter"
 
+Bundle "ehamberg/vim-cute-python"
+
 if !has('win32')
   Bundle "Valloric/YouCompleteMe"
 endif
