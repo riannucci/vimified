@@ -33,4 +33,10 @@ alias ll='ls -laX'
 
 export EDITOR=vim
 
-. <(ssh-agent)
+if [[ ! -S ~/.byobu/.ssh-agent ]]
+then
+  eval "$(ssh-agent)"
+  ln -sf $SSH_AUTH_SOCK ~/.byobu/.ssh-agent
+fi
+
+export SSH_AUTH_SOCK=~/.byobu/.ssh-agent
