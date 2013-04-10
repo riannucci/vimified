@@ -2,22 +2,18 @@
 import sys
 
 from pprint import pprint
-from common import CalledProcessError, run_git, VERBOSE, abbrev, upstream
-from common import branches
-
-def clean_refs():
-  tags = [t.strip() for t in run_git('tag', '-l', 'reup.*').split()]
-  run_git('tag', '-d', *tags)
-
+from common import CalledProcessError, run_git, VERBOSE, upstream
+from common import branches, current_branch, get_or_create_merge_base_tag
+from common import clean_refs, git_hash
 
 def main():
   if '--clean' in sys.argv:
     clean_refs()
     return 0
 
-  orig_branch = abbrev('HEAD')
+  orig_branch = current_branch()
   if orig_branch == 'HEAD':
-    orig_branch = run_git('rev-parse', 'HEAD')
+    orig_branch = git_hash('HEAD')
 
   run_git('fetch', 'origin', stderr=None)
   branch_tree = {}
@@ -30,17 +26,7 @@ def main():
 
   starting_refs = {}
   for branch, parent in branch_tree.iteritems():
-    tag = "reup.merge_base_for_%s" % run_git('rev-parse', branch)
-    tagval = None
-    try:
-      tagval = run_git('rev-parse', tag)
-      print 'Found previous merge-base for %s: %s' % (branch, tagval)
-    except CalledProcessError:
-      pass
-    if not tagval:
-      run_git('tag', '-m', tag, tag, run_git('merge-base', parent, branch))
-      tagval = run_git('rev-parse', tag)
-    starting_refs[branch] = tagval
+    starting_refs[branch] = get_or_create_merge_base_tag(branch, parent)
 
   if VERBOSE:
     pprint(branch_tree)
@@ -51,13 +37,14 @@ def main():
   while branch_tree:
     this_pass = [i for i in branch_tree.items() if i[1] not in branch_tree]
     for branch, parent in this_pass:
-      print 'Rebasing:', branch
-      try:
-        run_git('rebase', '--onto', parent, starting_refs[branch], branch)
-      except CalledProcessError as ex:
-        print ex.output
-        print ex.out_err
-        raise
+      if git_hash(parent) != git_hash(starting_refs[branch]):
+        print 'Rebasing:', branch
+        try:
+          run_git('rebase', '--onto', parent, starting_refs[branch], branch)
+        except CalledProcessError as ex:
+          print ex.output
+          print ex.out_err
+          raise
       del branch_tree[branch]
 
   clean_refs()

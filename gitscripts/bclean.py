@@ -2,8 +2,8 @@
 import sys
 import collections
 
-from common import run_git, VERBOSE, CalledProcessError, abbrev, upstream
-from common import branches
+from common import run_git, VERBOSE, CalledProcessError, upstream
+from common import branches, current_branch
 
 def main():
   merged = list(branches('--merged', 'origin/master'))
@@ -25,7 +25,7 @@ def main():
     print upstreams
     print downstreams
 
-  current = abbrev('HEAD')
+  current = current_branch
   if current in merged:
     run_git('checkout', 'origin/master')
   for branch in merged:

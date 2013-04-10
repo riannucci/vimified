@@ -16,6 +16,7 @@
   thaw   = !((git log --pretty=%s -n1 | grep FREEZE -q) && git reset 'HEAD~') || echo 'Nothing to thaw.'
   nb     = checkout --track origin/master -b
   tb     = checkout -tb
+  rp     = !~/.vim/gitscripts/reparent.py
 [credential]
   helper = osxkeychain
 [push]

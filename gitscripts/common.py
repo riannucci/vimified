@@ -47,6 +47,10 @@ def abbrev(ref):
   return run_git('rev-parse', '--abbrev-ref', ref)
 
 
+def git_hash(reflike):
+  return run_git('rev-parse', reflike)
+
+
 def upstream(branch):
   try:
     return run_git('rev-parse', '--abbrev-ref', '--symbolic-full-name',
@@ -60,3 +64,26 @@ def branches(*args):
     if line == NO_BRANCH:
       continue
     yield line.split()[-1]
+
+
+def current_branch():
+  return abbrev('HEAD')
+
+
+def clean_refs():
+  tags = [t.strip() for t in run_git('tag', '-l', 'gitscripts.*').split()]
+  run_git('tag', '-d', *tags)
+
+
+def get_or_create_merge_base_tag(branch, parent):
+  tag = "gitscripts.merge_base_for_%s" % run_git('rev-parse', branch)
+  tagval = None
+  try:
+    tagval = run_git('rev-parse', tag)
+    print 'Found previous merge-base for %s: %s' % (branch, tagval)
+  except CalledProcessError:
+    pass
+  if not tagval:
+    run_git('tag', '-m', tag, tag, run_git('merge-base', parent, branch))
+    tagval = run_git('rev-parse', tag)
+  return tagval+'^{}'  # this lets rev-parse know this is actually a tag
