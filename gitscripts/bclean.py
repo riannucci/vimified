@@ -1,11 +1,9 @@
-#!/usr/bin/env python
-import sys
 import collections
 
 from common import run_git, VERBOSE, CalledProcessError, upstream
 from common import branches, current_branch
 
-def main():
+def bclean():
   merged = list(branches('--merged', 'origin/master'))
 
   if VERBOSE:
@@ -37,7 +35,3 @@ def main():
     print run_git('branch', '-d', branch)
 
   return 0
-
-
-if __name__ == '__main__':
-  sys.exit(main())

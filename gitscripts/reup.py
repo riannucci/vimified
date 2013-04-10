@@ -2,6 +2,8 @@
 import sys
 
 from pprint import pprint
+
+from bclean import bclean
 from common import CalledProcessError, run_git, VERBOSE, upstream
 from common import branches, current_branch, get_or_create_merge_base_tag
 from common import clean_refs, git_hash
@@ -48,6 +50,8 @@ def main():
       del branch_tree[branch]
 
   clean_refs()
+
+  bclean()
 
   run_git('checkout', orig_branch)
 

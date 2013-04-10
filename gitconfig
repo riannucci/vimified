@@ -9,7 +9,6 @@
 [alias]
   udiff  = !git diff $(git merge-base HEAD $(git config branch.$(git rev-parse --abbrev-ref HEAD).merge))
   map    = !git log --graph --full-history --all --color --date=short --pretty=format:'%x1b[31m%h%x09%x1b[32m%d%x1b[0m%x20%ad %s' $(git config iannucci.mapextra 2> /dev/null) || true
-  bclean = !~/.vim/gitscripts/bclean.py
   reup   = !~/.vim/gitscripts/reup.py
   squash = !git reset --soft $(git merge-base $(git config branch.$(git rev-parse --abbrev-ref HEAD).merge) HEAD) && git commit -C HEAD@{1} -a
   freeze = commit -am 'FREEZE'
