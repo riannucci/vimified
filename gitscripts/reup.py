@@ -53,7 +53,8 @@ def main():
 
   bclean()
 
-  run_git('checkout', orig_branch)
+  if orig_branch in branches():
+    run_git('checkout', orig_branch)
 
   return 0
 
