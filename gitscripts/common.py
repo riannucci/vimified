@@ -80,7 +80,8 @@ def get_or_create_merge_base_tag(branch, parent):
   tagval = None
   try:
     tagval = run_git('rev-parse', tag)
-    print 'Found previous merge-base for %s: %s' % (branch, tagval)
+    if VERBOSE:
+      print 'Found tagged merge-base for %s: %s' % (branch, tagval)
   except CalledProcessError:
     pass
   if not tagval:
