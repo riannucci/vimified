@@ -4,6 +4,7 @@ import sys
 from pprint import pprint
 
 from bclean import bclean
+from squash import squash
 from common import CalledProcessError, run_git, VERBOSE, upstream
 from common import branches, current_branch, get_or_create_merge_base_tag
 from common import clean_refs, git_hash
@@ -35,7 +36,6 @@ def main():
     pprint(starting_refs)
 
   # XXX There is a more efficient way to do this, but for now...
-  # TODO(iannucci): See if squashed branch is a perfect fit.
   while branch_tree:
     this_pass = [i for i in branch_tree.items() if i[1] not in branch_tree]
     for branch, parent in this_pass:
@@ -43,10 +43,25 @@ def main():
         print 'Rebasing:', branch
         try:
           run_git('rebase', '--onto', parent, starting_refs[branch], branch)
-        except CalledProcessError as ex:
-          print ex.output
-          print ex.out_err
-          raise
+        except CalledProcessError:
+          print "Failed! Attempting to squash", branch, "...",
+          squash_branch = branch+"_squash_attempt"
+          run_git('rebase', '--abort')
+          run_git('checkout', '-b', squash_branch)
+          squash()
+          try:
+            run_git('rebase', '--onto', parent, starting_refs[branch],
+                    squash_branch)
+            print 'Success!!'
+          except CalledProcessError:
+            run_git('rebase', '--abort')
+            print 'Failure :('
+            return 1
+          finally:
+            run_git('checkout', branch)
+            run_git('branch', '-D', squash_branch)
+          squash()
+          run_git('rebase', '--onto', parent, starting_refs[branch], branch)
       del branch_tree[branch]
 
   clean_refs()
