@@ -23,8 +23,7 @@ def bclean():
     print upstreams
     print downstreams
 
-  current = current_branch
-  if current in merged:
+  if current_branch() in merged:
     run_git('checkout', 'origin/master')
   for branch in merged:
     for down in downstreams[branch]:
