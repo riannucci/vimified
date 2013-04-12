@@ -19,4 +19,4 @@
 [credential]
   helper = osxkeychain
 [push]
-  default = simple
+  default = upstream
