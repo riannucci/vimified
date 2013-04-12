@@ -27,7 +27,7 @@ def main():
               colored_branches.append(CYAN+BRIGHT+b+RESET)
               current = None
             elif b in all_branches:
-              colored_branches.append(GREEN+b)
+              colored_branches.append(GREEN+BRIGHT+b+RESET)
               all_branches.remove(b)
             else:
               colored_branches.append(RED+b)
@@ -37,6 +37,8 @@ def main():
       sys.stdout.write(line)
 
   except KeyboardInterrupt:
+    pass
+  except IOError:
     pass
   return 0
 
