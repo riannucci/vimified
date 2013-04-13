@@ -97,6 +97,8 @@ def main():
 
   if orig_branch in branches():
     run_git('checkout', orig_branch)
+  else:
+    run_git('checkout', 'origin/master')
 
   return 0
 
