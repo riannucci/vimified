@@ -4,6 +4,7 @@
 [core]
   autocrlf = false
   filemode = false
+  excludesfile = ~/vimified/gitexcludes
 [color]
   ui = true
 [alias]
