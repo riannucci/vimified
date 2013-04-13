@@ -2,6 +2,8 @@ import subprocess
 import sys
 
 VERBOSE = '--verbose' in sys.argv
+if VERBOSE:
+  sys.argv.remove('--verbose')
 
 NO_BRANCH = '* (no branch)'
 
