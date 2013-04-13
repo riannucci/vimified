@@ -2,7 +2,7 @@
 import sys
 
 from common import upstream, current_branch, branches, run_git
-from common import get_or_create_merge_base_tag
+from common import get_or_create_merge_base_tag, VERBOSE
 
 def main(argv):
   assert len(argv) == 2, "Must supply new parent"
@@ -17,7 +17,8 @@ def main(argv):
   print "Reparenting %s to track %s (was %s)" % (branch, new_parent, cur_parent)
   run_git('branch', '--set-upstream-to', new_parent, branch)
   try:
-    run_git('reup', stdout=None, stderr=None)
+    cmd = ['reup'] + (['--verbose'] if VERBOSE else [])
+    run_git(*cmd, stdout=None, stderr=None)
   except:
     print "Resetting parent back to %s" % (cur_parent)
     run_git('branch', '--set-upstream-to', cur_parent, branch)
