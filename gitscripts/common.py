@@ -68,6 +68,13 @@ def branches(*args):
     yield line.split()[-1]
 
 
+def tags(*args):
+  for line in run_git('tag', *args).splitlines():
+    if line == NO_BRANCH:
+      continue
+    yield line.split()[-1]
+
+
 def current_branch():
   return abbrev('HEAD')
 
