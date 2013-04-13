@@ -35,7 +35,7 @@ export EDITOR=vim
 
 if [[ ! -S ~/.byobu/.ssh-agent ]]
 then
-  eval "$(ssh-agent)"
+  eval "$(ssh-agent -t 10m)"
   ln -sf $SSH_AUTH_SOCK ~/.byobu/.ssh-agent
 fi
 
