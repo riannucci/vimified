@@ -14,9 +14,11 @@
   squash = !~/.vim/gitscripts/squash.py
   freeze = commit -am 'FREEZE'
   thaw   = !((git log --pretty=%s -n1 | grep FREEZE -q) && git reset 'HEAD~') || echo 'Nothing to thaw.'
+  root   = checkout origin/master
   nb     = checkout --track origin/master -b
   tb     = checkout -tb
   rp     = !~/.vim/gitscripts/rp.py
+  rpr    = !~/.vim/gitscripts/rp.py origin/master
 [credential]
   helper = osxkeychain
 [push]
