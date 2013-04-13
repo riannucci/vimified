@@ -24,7 +24,8 @@ def rebase(parent, start, branch, abort=False):
 
 
 def clean_branch(branch, parent, starting_ref):
-  if git_hash(parent) != git_hash(starting_ref):
+  if (git_hash(parent) != git_hash(starting_ref)
+      and git_hash(branch) != git_hash(starting_ref)):
     print 'Rebasing:', branch
 
     # Try a plain rebase first
