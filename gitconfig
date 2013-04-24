@@ -4,7 +4,6 @@
 [core]
   autocrlf = false
   filemode = false
-	deltaBaseCacheLimit = 1G
   excludesfile = ~/vimified/gitexcludes
 [color]
   ui = true
