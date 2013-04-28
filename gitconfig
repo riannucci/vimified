@@ -10,7 +10,7 @@
   ui = true
 [alias]
   udiff  = !git diff $(git merge-base @{u} HEAD)
-  map    = !git log --graph --full-history --all --color --date=short --pretty=format:'%C(red bold)%h%x09%Creset%C(green)%d%Creset %C(yellow)%ad%Creset ~ %s' $(git config iannucci.mapextra 2> /dev/null) | ~/.vim/gitscripts/pylog.py | less || true
+  map    = !git log --graph --full-history --all --color --date=short --pretty=format:'%C(red bold)%h%x09%Creset%C(green)%d%Creset %C(yellow)%ad%Creset ~ %s' $(git config iannucci.mapextra 2> /dev/null) "$@" | ~/.vim/gitscripts/pylog.py | less || true
   reup   = !~/.vim/gitscripts/reup.py
   squash = !~/.vim/gitscripts/squash.py
   freeze = commit -am 'FREEZE'
