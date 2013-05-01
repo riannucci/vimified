@@ -70,4 +70,4 @@ source $BYOBU_CONFIG_DIR/.tmux.conf
 
 set-option -g renumber-windows on
 
-source ~/.vim/bundle/powerline/powerline/bindings/tmux/powerline.conf
+source ~/.vim/powerline/powerline.conf
