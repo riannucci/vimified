@@ -87,7 +87,7 @@ endif
 
 " _. Fancy {{{
 if count(g:vimified_packages, 'fancy')
-    Bundle 'Lokaltog/vim-powerline'
+    Bundle 'Lokaltog/powerline'
     let g:Powerline_symbols = 'fancy'
     let g:Powerline_cache_enabled = 1
 endif
