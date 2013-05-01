@@ -80,20 +80,33 @@ def current_branch():
 
 
 def clean_refs():
-  tags = [t.strip() for t in run_git('tag', '-l', 'gitscripts.*').split()]
-  run_git('tag', '-d', *tags)
+  run_git('tag', '-d',
+          *[t.strip() for t in run_git('tag', '-l', 'gitscripts.*').split()])
+
+
+MERGE_BASE_TAG_FMT = "gitscripts.merge_base_for_%s"
+
+
+def manual_merge_base_tag(branch, base):
+  tag = "gitscripts.merge_base_for_%s" % git_hash(branch)
+  run_git('tag', '-f', '-m', tag, tag, git_hash(base))
+
+
+def nuke_merge_base_tag(branch):
+  tag = "gitscripts.merge_base_for_%s" % git_hash(branch)
+  run_git('tag', '-d', tag)
 
 
 def get_or_create_merge_base_tag(branch, parent):
-  tag = "gitscripts.merge_base_for_%s" % run_git('rev-parse', branch)
+  tag = MERGE_BASE_TAG_FMT % git_hash(branch)
   tagval = None
   try:
-    tagval = run_git('rev-parse', tag)
+    tagval = git_hash(tag)
     if VERBOSE:
       print 'Found tagged merge-base for %s: %s' % (branch, tagval)
   except CalledProcessError:
     pass
   if not tagval:
     run_git('tag', '-m', tag, tag, run_git('merge-base', parent, branch))
-    tagval = run_git('rev-parse', tag)
+    tagval = git_hash(tag)
   return tagval+'^{}'  # this lets rev-parse know this is actually a tag
