@@ -51,7 +51,6 @@ set-option -g mode-keys vi
 
 set-window-option -g automatic-rename off
 set-window-option -g aggressive-resize on
-set-window-option -g monitor-activity on
 
 # Cannot use:
 #  - screen-bce, screen-256color-bce: tmux does not support bce
