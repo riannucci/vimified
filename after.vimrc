@@ -118,6 +118,8 @@ for f in split(glob('~/.vim/syntax_checkers/*.vim'), '\n')
 endfor
 
 set rtp+=~/.vim
+
+Bundle 'Lokaltog/powerline'
 set rtp+=~/.vim/bundle/powerline/powerline/bindings/vim
 
 if has('win32')
