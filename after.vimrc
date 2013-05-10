@@ -35,12 +35,6 @@ set tags+=./tags;
 
 set mouse=a
 
-nunmap ;
-nunmap <C-h>
-nunmap <C-j>
-nunmap <C-k>
-nunmap <C-l>
-
 " Tagbar mapping interferes with Align
 nunmap <Leader>t
 nmap   <Leader>, :TagbarToggle<CR>
@@ -148,3 +142,5 @@ au FileType python set ts=2 sts=2 sw=2
 if executable('/usr/local/bin/git')
   let g:fugitive_git_executable='/usr/local/bin/git'
 endif
+
+let g:ycm_extra_conf_globlist = ['~/s/*']

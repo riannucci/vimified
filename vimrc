@@ -225,30 +225,15 @@ match ErrorMsg '^\(<\|=\|>\)\{7\}\([^=].\+\)\?$'
 " }}}
 
 " Mappings {{{
-
-" Yank from current cursor position to end of line
-map Y y$
-" Yank content in OS's clipboard. `o` stands for "OS's Clipoard".
-vnoremap <leader>yo "*y
-" Paste content from OS's clipboard
-nnoremap <leader>po "*p
-
-" bracket match using tab
-map <tab> %
-
+"
 " clear highlight after search
 noremap <silent><Leader>/ :nohls<CR>
-
-" better ESC
-inoremap jk <Esc>
 
 nmap <silent> <leader>hh :set invhlsearch<CR>
 nmap <silent> <leader>ll :set invlist<CR>
 nmap <silent> <leader>nn :set invnumber<CR>
 nmap <silent> <leader>pp :set invpaste<CR>
 nmap <silent> <leader>ii :set invrelativenumber<CR>
-
-nmap ; :
 
 " Emacs bindings in command line mode
 cnoremap <c-a> <home>
@@ -270,12 +255,6 @@ nmap <leader>wq :w!<cr>:Bclose<cr>
 cmap w!! w !sudo tee % >/dev/null
 
 " }}}
-
-" . abbrevs {{{
-"
-iabbrev z@ oh@zaiste.net
-
-" . }}}
 
 " Settings {{{
 set autoread
@@ -330,10 +309,10 @@ set completeopt=longest,menuone,preview
 
 " White characters {{{
 set autoindent
-set tabstop=4
-set softtabstop=4
+set tabstop=2
+set softtabstop=2
 set textwidth=80
-set shiftwidth=4
+set shiftwidth=2
 set expandtab
 set wrap
 set formatoptions=qrn1
@@ -352,9 +331,6 @@ set dictionary=/usr/share/dict/words
 
 " Save when losing focus
 au FocusLost    * :silent! wall
-"
-" When vimrc is edited, reload it
-autocmd! BufWritePost vimrc source ~/.vimrc
 
 " }}}
 
@@ -387,10 +363,6 @@ autocmd BufWritePre * :%s/\s\+$//e
 " }}}
 
 " . searching {{{
-
-" sane regexes
-nnoremap / /\v
-vnoremap / /\v
 
 set ignorecase
 set smartcase
@@ -437,12 +409,6 @@ nnoremap j gj
 nnoremap k gk
 vnoremap j gj
 vnoremap k gk
-
-" Easy splitted window navigation
-noremap <C-h>  <C-w>h
-noremap <C-j>  <C-w>j
-noremap <C-k>  <C-w>k
-noremap <C-l>  <C-w>l
 
 " Easy buffer navigation
 noremap <leader>bp :bprevious<cr>
@@ -557,16 +523,6 @@ nnoremap <silent> <leader><tab> :ScratchToggle<cr>
 " Requires the gist command line too (brew install gist)
 vnoremap <leader>G :w !gist -p -t %:e \| pbcopy<cr>
 " }}}
-
-" }}}
-
-" TEXT OBJECTS {{{
-
-" Shortcut for [] motion
-onoremap ir i[
-onoremap ar a[
-vnoremap ir i[
-vnoremap ar a[
 
 " }}}
 
