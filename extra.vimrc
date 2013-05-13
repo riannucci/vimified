@@ -21,3 +21,6 @@ Bundle "ehamberg/vim-cute-python"
 if !has('win32')
   Bundle "Valloric/YouCompleteMe"
 endif
+
+Bundle 'Lokaltog/powerline'
+set rtp+=~/.vim/bundle/powerline/powerline/bindings/vim

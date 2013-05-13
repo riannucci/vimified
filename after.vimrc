@@ -119,9 +119,6 @@ endfor
 
 set rtp+=~/.vim
 
-Bundle 'Lokaltog/powerline'
-set rtp+=~/.vim/bundle/powerline/powerline/bindings/vim
-
 if has('win32')
   " Maximize, baby!
   autocmd GUIEnter * simalt ~X
