@@ -5,7 +5,7 @@
   autocrlf = false
   filemode = false
   excludesfile = ~/vimified/gitexcludes
-  pager = /usr/local/google/home/iannucci/vimified/bin/less_helper
+  pager = ~/vimified/bin/less_helper
 [color]
   ui = true
 [alias]
