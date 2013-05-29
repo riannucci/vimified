@@ -15,34 +15,37 @@ def terminal_size():
   return w, h
 
 def main():
-  if len(sys.argv) > 1:
-    sys.argv[0] = 'less'
-    os.execvp('less', sys.argv)
+  try:
+    if len(sys.argv) > 1:
+      sys.argv[0] = 'less'
+      os.execvp('less', sys.argv)
 
-  _, num_lines = terminal_size()
+    _, num_lines = terminal_size()
 
-  buf = []
-  for i, line in enumerate(sys.stdin):
-    buf.append(line)
-    if i > num_lines:
-      break
-  else:
+    buf = []
+    for i, line in enumerate(sys.stdin):
+      buf.append(line)
+      if i > num_lines:
+        break
+    else:
+      for line in buf:
+        sys.stdout.write(line)
+      return
+
+    p = subprocess.Popen(['less'], stdin=subprocess.PIPE)
     for line in buf:
-      sys.stdout.write(line)
-    return
+      p.stdin.write(line)
 
-  p = subprocess.Popen(['less'], stdin=subprocess.PIPE)
-  for line in buf:
-    p.stdin.write(line)
+    # It seems like there should be a non-userspace way to chain sys.stdin onto
+    # p.stdin, but I can't think of it at the moment.
+    for line in sys.stdin:
+      p.stdin.write(line)
+    p.stdin.close()
 
-  # It seems like there should be a non-userspace way to chain sys.stdin onto
-  # p.stdin, but I can't think of it at the moment.
-  for line in sys.stdin:
-    p.stdin.write(line)
-  p.stdin.close()
-
-  p.wait()
-  return p.returncode
+    p.wait()
+    return p.returncode
+  except:
+    return 0
 
 if __name__ == '__main__':
   sys.exit(main())

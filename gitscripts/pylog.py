@@ -47,9 +47,7 @@ def main():
           if head_marker:
             line = line.replace('*', head_marker, 1)
       sys.stdout.write(line)
-  except KeyboardInterrupt:
-    pass
-  except IOError:
+  except:
     pass
   return 0
 
