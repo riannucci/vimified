@@ -78,9 +78,6 @@ let g:snipMate = {}
 let g:snipMate.scope_aliases = {}
 let g:snipMate.scope_aliases['htmldjango'] = 'htmldjango,xhtml,html,javascript'
 
-let g:syntastic_python_checker = 'pylint'
-let g:syntastic_python_checker_args = '--ignore=E111,E128,E121'
-
 let g:pymode_options_indent = 0
 let g:pymode_rope = 0
 
