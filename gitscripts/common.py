@@ -5,7 +5,7 @@ VERBOSE = '--verbose' in sys.argv
 if VERBOSE:
   sys.argv.remove('--verbose')
 
-NO_BRANCH = '* (no branch)'
+NO_BRANCH = ('* (no branch)', '* (detached from ')
 
 # Exception classes used by this module.
 class CalledProcessError(Exception):
@@ -63,14 +63,14 @@ def upstream(branch):
 
 def branches(*args):
   for line in run_git('branch', *args).splitlines():
-    if line == NO_BRANCH:
+    if line.startswith(NO_BRANCH):
       continue
     yield line.split()[-1]
 
 
 def tags(*args):
   for line in run_git('tag', *args).splitlines():
-    if line == NO_BRANCH:
+    if line.startswith(NO_BRANCH):
       continue
     yield line.split()[-1]
 
