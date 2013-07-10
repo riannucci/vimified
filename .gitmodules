@@ -4,3 +4,6 @@
 [submodule "LS_COLORS"]
 	path = LS_COLORS
 	url = https://github.com/riannucci/LS_COLORS.git
+[submodule "zsh_custom/plugins/zsh-syntax-highlighting"]
+	path = zsh_custom/plugins/zsh-syntax-highlighting
+	url = git://github.com/zsh-users/zsh-syntax-highlighting.git
