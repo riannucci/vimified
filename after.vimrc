@@ -55,6 +55,9 @@ vmap <S-Down>  <Down>
 vmap <S-Left>  <Left>
 vmap <S-Right> <Right>
 
+" Make Page keys only go by half the screen.
+map! <PageUp> <C-U>
+map! <PageDown> <C-F>
 
 " Let's stick with hybrid for now
 " colorscheme distinguished
