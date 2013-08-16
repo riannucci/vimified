@@ -53,6 +53,10 @@ def git_hash(reflike):
   return run_git('rev-parse', reflike)
 
 
+def parents(ref):
+  return run_git('rev-parse', '%s^@' % ref).splitlines()
+
+
 def upstream(branch):
   try:
     return run_git('rev-parse', '--abbrev-ref', '--symbolic-full-name',
