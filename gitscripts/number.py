@@ -11,6 +11,8 @@ import threading
 from common import git_hash, run_git, git_intern_f, git_tree, parents
 from common import git_mktree, run_git_lines, CalledProcessError
 
+VERBOSE = False
+
 class StatusPrinter(threading.Thread):
   def __init__(self, fmt=None, use_lock=False):
     self.fmt = fmt
@@ -23,17 +25,16 @@ class StatusPrinter(threading.Thread):
 
   @staticmethod
   def _emit(s):
-    sys.stdout.write('\r')
-    sys.stdout.write(s)
-    sys.stdout.flush()
+    if VERBOSE:
+      sys.stderr.write('\r'+s)
+      sys.stderr.flush()
 
   def run(self):
     with self._dead_cond:
       while not self._dead:
         self._emit(self.fmt % self._count)
         self._dead_cond.wait(.5)
-      self._emit(self.fmt % self._count)
-      sys.stdout.write('\n')
+      self._emit((self.fmt+'\n') % self._count)
 
   def join(self, timeout=None):
     self._dead = True
@@ -287,6 +288,13 @@ def biased_bisect_resolve(target):
 
 
 def main():
+  global VERBOSE
+  try:
+    sys.argv.remove('-v')
+    VERBOSE = True
+  except ValueError:
+    pass
+
   target = hexlify(git_hash(sys.argv[1] if len(sys.argv) > 1 else 'HEAD'))
 
   # maybe we can get lucky :)
