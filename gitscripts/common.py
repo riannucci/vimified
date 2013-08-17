@@ -1,5 +1,6 @@
 import subprocess
 import sys
+import tempfile
 
 VERBOSE = '--verbose' in sys.argv
 if VERBOSE:
@@ -25,8 +26,11 @@ class CalledProcessError(Exception):
 def check_output(*popenargs, **kwargs):
   kwargs.setdefault('stdout', subprocess.PIPE)
   kwargs.setdefault('stderr', subprocess.PIPE)
+  indata = kwargs.pop('indata', None)
+  if indata is not None:
+    kwargs['stdin'] = subprocess.PIPE
   process = subprocess.Popen(*popenargs, **kwargs)
-  output, out_err = process.communicate()
+  output, out_err = process.communicate(indata)
   retcode = process.poll()
   if retcode:
     cmd = kwargs.get('args')
@@ -34,6 +38,41 @@ def check_output(*popenargs, **kwargs):
       cmd = popenargs[0]
     raise CalledProcessError(retcode, cmd, output=output, out_err=out_err)
   return output
+
+
+def yield_stdout(*popenargs, **kwargs):
+  with tempfile.TemporaryFile() as err_file:
+    kwargs['stdout'] = subprocess.PIPE
+    kwargs['stderr'] = err_file
+    kwargs['stdin'] = subprocess.PIPE
+
+    process = subprocess.Popen(*popenargs, **kwargs)
+    process.stdin.close()
+
+    l = ' '
+    while l:
+      l = process.stdout.readline()
+      if not l:
+        break
+      yield l.strip()
+
+    retcode = process.wait()
+
+    err_file.seek(0)
+    out_err = err_file.read()
+
+  if retcode:
+    cmd = kwargs.get('args')
+    if cmd is None:
+      cmd = popenargs[0]
+    raise CalledProcessError(retcode, cmd, out_err=out_err)
+
+
+def run_git_lines(*cmd, **kwargs):
+  cmd = ('git',) + cmd
+  if VERBOSE:
+    print cmd
+  return yield_stdout(cmd, **kwargs)
 
 
 def run_git(*cmd, **kwargs):
@@ -51,6 +90,37 @@ def abbrev(ref):
 
 def git_hash(reflike):
   return run_git('rev-parse', reflike)
+
+
+def git_intern_f(f, kind='blob'):
+  ret = run_git('hash-object', '-t', kind, '-w', '--stdin', stdin=f)
+  f.close()
+  return ret
+
+
+def git_tree(treeish):
+  ret = {}
+  try:
+    for line in run_git('ls-tree', '-z', '--full-tree', treeish).split('\0'):
+      if not line:
+        continue
+      mode, typ, ref, name = line.split()
+      ret[name] = (mode, typ, ref)
+  except CalledProcessError:
+    pass
+  return ret
+
+
+def git_mktree(treedict):
+  """
+  Args:
+    treedict - { name: (mode, type, ref) }
+  """
+  with tempfile.TemporaryFile() as f:
+    for name, (mode, typ, ref) in treedict.iteritems():
+      f.write('%s %s %s\t%s\0' % (mode, typ, ref, name))
+    f.seek(0)
+    return run_git('mktree', '-z', stdin=f)
 
 
 def parents(ref):
