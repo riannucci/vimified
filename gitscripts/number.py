@@ -28,7 +28,7 @@ hexlify = lambda s: s.decode('hex')
 dehexlify = lambda s: s.encode('hex')
 
 
-class StatusPrinter(threading.Thread):
+class StatusPrinter(object):
   """Threaded single-stat status message printer."""
   ENABLED = False
 
@@ -45,30 +45,33 @@ class StatusPrinter(threading.Thread):
     self._count = 0
     self._dead = False
     self._dead_cond = threading.Condition()
-    super(StatusPrinter, self).__init__()
-    self.start()
+    self._thread = threading.Thread(target=self._run)
 
   def _emit(self, s):
     if self.ENABLED:
       sys.stderr.write('\r'+s)
       sys.stderr.flush()
 
-  def run(self):
+  def _run(self):
     with self._dead_cond:
       while not self._dead:
         self._emit(self.fmt % self._count)
         self._dead_cond.wait(.5)
       self._emit((self.fmt+'\n') % self._count)
 
-  def join(self, timeout=None):
+  def inc(self, amount=1):
+    self._count += amount
+
+  def __enter__(self):
+    self._thread.start()
+    return self.inc
+
+  def __exit__(self, _exc_type, _exc_value, _traceback):
     self._dead = True
     with self._dead_cond:
       self._dead_cond.notifyAll()
-    if self.isAlive():
-      super(StatusPrinter, self).join(timeout)
-
-  def inc(self, amount=1):
-    self._count += amount
+    self._thread.join()
+    del self._thread
 
 
 def memoize(f):
@@ -180,6 +183,7 @@ def set_num(ref, val):
   prefix = ref[:2]
   get_num_tree(prefix)[ref] = val
   DIRTY_TREES[prefix] += 1
+  return val
 
 
 def group_prefix(items):
@@ -267,22 +271,18 @@ def finalize(target):
   total += len(set(x[:1] for x in DIRTY_TREES))
   fmt = 'Finalizing: (%%d/%d)' % total
 
-  status = StatusPrinter(fmt)
-
-  try:
-    files = map(make_flat_file(status.inc), sorted(DIRTY_TREES.iteritems()))
-    trees = map(make_merged_tree(status.inc), group_prefix(files))
+  with StatusPrinter(fmt) as inc:
+    files = map(make_flat_file(inc), sorted(DIRTY_TREES.iteritems()))
+    trees = map(make_merged_tree(inc), group_prefix(files))
 
     tree = git_tree(REF) or {}
     for name, val in trees:
       tree[name] = (TREE_MOD, TREE, val.get())
-      status.inc()
+      inc()
 
     new_head = run_git('commit-tree', '-m', msg, git_mktree(tree),
                        '-p', git_hash(REF), '-p', target)
     run_git('update-ref', REF, new_head)
-  finally:
-    status.join()
 
 
 def resolve(target):
@@ -296,23 +296,17 @@ def resolve(target):
 
   rev_list = []
 
-  load_status = StatusPrinter('Loading commits: %d')
-  try:
+  with StatusPrinter('Loading commits: %d') as inc:
     for line in run_git_lines('rev-list', '--topo-order', '--parents',
                               '--reverse', dehexlify(target), '^'+REF):
       rev_list.append(map(hexlify, line.split()))
-      load_status.inc()
-  finally:
-    load_status.join()
+      inc()
 
-  gen_status = StatusPrinter('Reticulating splines: (%%d/%d)' % len(rev_list))
-  try:
+  with StatusPrinter('Reticulating splines: (%%d/%d)' % len(rev_list)) as inc:
     for toks in rev_list:
-      num = max([-1]+map(get_num, toks[1:])) + 1
-      set_num(toks[0], num)
-      gen_status.inc()
-  finally:
-    gen_status.join()
+      parnums = map(get_num, toks[1:])
+      num = set_num(toks[0], max(parnums) + 1 if parnums else 0)
+      inc()
 
   finalize(dehexlify(target))
 
