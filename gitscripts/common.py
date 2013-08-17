@@ -107,7 +107,7 @@ def git_tree(treeish):
       mode, typ, ref, name = line.split()
       ret[name] = (mode, typ, ref)
   except CalledProcessError:
-    pass
+    return None
   return ret
 
 

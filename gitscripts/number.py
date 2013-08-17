@@ -1,14 +1,14 @@
 #!/usr/bin/env python
 
+import collections
 import functools
 import multiprocessing
 import struct
-import itertools
 import sys
 import tempfile
 import threading
 
-from common import git_hash, run_git, git_intern_f, git_tree, parents
+from common import git_hash, run_git, git_intern_f, git_tree
 from common import git_mktree, run_git_lines, CalledProcessError
 
 VERBOSE = False
@@ -59,7 +59,7 @@ class StatusPrinter(threading.Thread):
       return self._count
 
 
-DIRTY_TREES = set()
+DIRTY_TREES = collections.defaultdict(int)
 NEW_NUM_COUNT = 0
 
 BLOB_MOD = '100644'
@@ -83,27 +83,36 @@ def memoize(f):
 
   return inner
 
-
 CHUNK_FMT = '!20sL'
 CHUNK_SIZE = struct.calcsize(CHUNK_FMT)
 
 
-@memoize
-def get_root_tree(_):
-  return set(map(hexlify, git_tree(REF)))
+ROOT_TREE = None
+def get_root_elms():
+  global ROOT_TREE
+  if ROOT_TREE is None:
+    tree = git_tree(REF)
+    if tree is None:
+      ref = run_git('commit-tree',
+                    '-m', 'Initial commit from git-number', git_mktree({}))
+      run_git('update-ref', REF, ref)
+      ROOT_TREE = set()
+    else:
+      ROOT_TREE = set(map(hexlify, tree))
+  return ROOT_TREE
 
 
 @memoize
-def get_par_tree(prefix_byte):
-  if prefix_byte not in get_root_tree(None):
+def get_par_elms(prefix_byte):
+  if prefix_byte not in get_root_elms():
     return {}
 
-  return set(map(hexlify, git_tree('%s:%02x' % (REF, ord(prefix_byte)))))
+  return set(map(hexlify, git_tree('%s:%02x' % (REF, ord(prefix_byte))) or {}))
 
 
 @memoize
 def get_num_tree(prefix_bytes):
-  if prefix_bytes[-1:] not in get_par_tree(prefix_bytes[:-1]):
+  if prefix_bytes[-1:] not in get_par_elms(prefix_bytes[:-1]):
     return {}
 
   prefix_bytes = map(ord, prefix_bytes)
@@ -144,12 +153,9 @@ def dehexlify(s):
 
 
 def set_num(ref, val):
-  global NEW_NUM_COUNT
-  NEW_NUM_COUNT += 1
-
   prefix = ref[:2]
   get_num_tree(prefix)[ref] = val
-  DIRTY_TREES.add(prefix)
+  DIRTY_TREES[prefix] += 1
 
 
 def group_prefix(items):
@@ -172,14 +178,14 @@ def group_prefix(items):
 
 
 def make_merged_tree(inc):
-  pool = multiprocessing.Pool(processes=multiprocessing.cpu_count()*2)
+  pool = multiprocessing.Pool()
   tree_fmt = REF+':%s'
 
   def make_merged_tree_inner(group):
     name, _ = group[0]
     ret_name = name[:2]
 
-    tree = git_tree(tree_fmt % ret_name)
+    tree = git_tree(tree_fmt % ret_name) or {}
     for name, val in group:
       tree[name[2:]] = (BLOB_MOD, BLOB, val.get())
       inc()
@@ -190,22 +196,23 @@ def make_merged_tree(inc):
 
 
 def make_flat_file(inc):
-  pool = multiprocessing.Pool(processes=multiprocessing.cpu_count()*2)
-  def make_flat_file_inner(prefix):
+  pool = multiprocessing.Pool()
+  def make_flat_file_inner(prefix_count):
+    prefix, count = prefix_count
     t = get_num_tree(prefix)
     ret = prefix.encode('hex'), pool.apply_async(intern_num_tree, (t,))
-    inc(len(t))
+    inc(count)
     return ret
   return make_flat_file_inner
 
 
-def finalize():
-  if not NEW_NUM_COUNT:
+def finalize(target):
+  if not DIRTY_TREES:
     return
 
-  msg = 'git-number Added %s numbers' % NEW_NUM_COUNT
+  total = sum(DIRTY_TREES.itervalues())
+  msg = 'git-number Added %s numbers' % total
 
-  total = NEW_NUM_COUNT
   total += len(DIRTY_TREES)
   total += len(set(x[:1] for x in DIRTY_TREES))
   fmt = 'Finalizing: (%%d/%d)' % total
@@ -214,21 +221,16 @@ def finalize():
   status.start()
 
   try:
-    files = map(make_flat_file(status.inc), sorted(DIRTY_TREES))
+    files = map(make_flat_file(status.inc), sorted(DIRTY_TREES.iteritems()))
     trees = map(make_merged_tree(status.inc), group_prefix(files))
 
-    tree = git_tree(REF)
+    tree = git_tree(REF) or {}
     for name, val in trees:
       tree[name] = (TREE_MOD, TREE, val.get())
       status.inc()
 
-    opts = ['-m', msg, git_mktree(tree)]
-    try:
-      opts = ['-p', git_hash(REF)] + opts
-    except CalledProcessError:
-      pass
-
-    new_head = run_git('commit-tree', *opts)
+    new_head = run_git('commit-tree', '-m', msg, git_mktree(tree),
+                       '-p', git_hash(REF), '-p', target)
     run_git('update-ref', REF, new_head)
   finally:
     status.join()
@@ -254,36 +256,24 @@ def get_gen_num(ref, *pars):
   return gen_next_num(ref, *pars)
 
 
-def biased_bisect_resolve(target):
+def resolve(target):
   load_status = StatusPrinter('Loading commits: %d')
 
+  opts = ['rev-list', '--topo-order', '--parents', '--reverse',
+          dehexlify(target), '^'+REF]
+
+  rev_list = []
   try:
-    next_check = 1
-    start_idx = 0
-    rev_list = []
-    lines = run_git_lines('rev-list', '--topo-order', '--parents',
-                          dehexlify(target))
-    for line in lines:
+    load_status.start()
+    for line in run_git_lines(*opts):
+      rev_list.append(map(hexlify, line.split()))
       load_status.inc()
-      toks = map(hexlify, line.split())
-      rev_list.insert(0, toks)
-      should_check = (len(rev_list) >= next_check)
-      if should_check:
-        if get_num(toks[0]) is not None:
-          lines.close()
-          for start_idx, toks in enumerate(rev_list):
-            if get_num(toks[0]) is None:
-              break
-          break
-        else:
-          next_check *= 2
-      if not load_status.isAlive():
-        load_status.start()
   finally:
     load_status.join()
 
-  for toks in itertools.islice(rev_list, start_idx, len(rev_list)):
+  for toks in rev_list:
     num = get_gen_num(*toks)
+
   return num
 
 
@@ -297,12 +287,10 @@ def main():
 
   target = hexlify(git_hash(sys.argv[1] if len(sys.argv) > 1 else 'HEAD'))
 
-  # maybe we can get lucky :)
-  gen_num = get_gen_num(target, *map(hexlify, parents(dehexlify(target))))
-  if gen_num is None:
-    gen_num = biased_bisect_resolve(target)
+  # try get_num because maybe we can get lucky :)
+  gen_num = get_num(target) or resolve(target)
 
-  finalize()
+  finalize(dehexlify(target))
 
   print gen_num
 
