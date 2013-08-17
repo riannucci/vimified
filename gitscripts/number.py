@@ -3,6 +3,7 @@
 import collections
 import functools
 import multiprocessing
+import optparse
 import struct
 import sys
 import tempfile
@@ -11,21 +12,44 @@ import threading
 from common import git_hash, run_git, git_intern_f, git_tree
 from common import git_mktree, run_git_lines, CalledProcessError
 
-VERBOSE = False
+
+BLOB = 'blob'
+BLOB_MOD = '100644'
+CHUNK_FMT = '!20sL'
+CHUNK_SIZE = struct.calcsize(CHUNK_FMT)
+DIRTY_TREES = collections.defaultdict(int)
+REF = 'refs/number/commits'
+ROOT_TREE = None
+TREE = 'tree'
+TREE_MOD = '040000'
+
+
+hexlify = lambda s: s.decode('hex')
+dehexlify = lambda s: s.encode('hex')
+
 
 class StatusPrinter(threading.Thread):
-  def __init__(self, fmt=None, use_lock=False):
+  """Threaded single-stat status message printer."""
+  ENABLED = False
+
+  def __init__(self, fmt):
+    """
+    Create a StatusPrinter.
+
+    Call .start() to get it going.
+
+    Args:
+      fmt - String format with a single '%d' where the counter value should go.
+    """
     self.fmt = fmt
-    self._use_lock = use_lock
-    self._lock = threading.Lock()
     self._count = 0
     self._dead = False
     self._dead_cond = threading.Condition()
     super(StatusPrinter, self).__init__()
+    self.start()
 
-  @staticmethod
-  def _emit(s):
-    if VERBOSE:
+  def _emit(self, s):
+    if self.ENABLED:
       sys.stderr.write('\r'+s)
       sys.stderr.flush()
 
@@ -44,66 +68,53 @@ class StatusPrinter(threading.Thread):
       super(StatusPrinter, self).join(timeout)
 
   def inc(self, amount=1):
-    if self._use_lock:
-      with self._lock:
-        self._count += amount
-    else:
-      self._count += amount
+    self._count += amount
 
-  @property
-  def count(self):
-    if self._use_lock:
-      with self._lock:
-        return self._count
-    else:
-      return self._count
-
-
-DIRTY_TREES = collections.defaultdict(int)
-NEW_NUM_COUNT = 0
-
-BLOB_MOD = '100644'
-BLOB = 'blob'
-TREE_MOD = '040000'
-TREE = 'tree'
-
-REF = 'refs/number/commits'
 
 def memoize(f):
+  """Decorator to memoize a pure function taking 0 or more positional args."""
   cache = {}
 
   @functools.wraps(f)
-  def inner(arg):
-    ret = cache.get(arg)
+  def inner(*args):
+    ret = cache.get(args)
     if ret is None:
-      ret = f(arg)
+      ret = f(*args)
       if ret is not None:
-        cache[arg] = ret
+        cache[args] = ret
     return ret
+  inner.cache = cache
 
   return inner
 
-CHUNK_FMT = '!20sL'
-CHUNK_SIZE = struct.calcsize(CHUNK_FMT)
 
-
-ROOT_TREE = None
+@memoize
 def get_root_elms():
-  global ROOT_TREE
-  if ROOT_TREE is None:
-    tree = git_tree(REF)
-    if tree is None:
-      ref = run_git('commit-tree',
-                    '-m', 'Initial commit from git-number', git_mktree({}))
-      run_git('update-ref', REF, ref)
-      ROOT_TREE = set()
-    else:
-      ROOT_TREE = set(map(hexlify, tree))
-  return ROOT_TREE
+  """Return a set() of all the subtree names in the root tree.
+
+  If the root reference doesn't exist, create it with an empty tree.
+
+  >>> get_root_elms()
+  set(['\x83', '\x04', '\x87', '\x8b', '\x0c', ...])
+  """
+  ret = set()
+  tree = git_tree(REF)
+  if tree is None:
+    ref = run_git('commit-tree',
+                  '-m', 'Initial commit from git-number', git_mktree({}))
+    run_git('update-ref', REF, ref)
+  else:
+    ret = set(map(hexlify, tree))
+  return ret
 
 
 @memoize
 def get_par_elms(prefix_byte):
+  """Return a set() of all the blob names in a given subtree of the root.
+
+  >>> get_par_elms('\x83')
+  set(['\xb4', '\xf3', ...])
+  """
   if prefix_byte not in get_root_elms():
     return {}
 
@@ -112,6 +123,12 @@ def get_par_elms(prefix_byte):
 
 @memoize
 def get_num_tree(prefix_bytes):
+  """Return a dictionary of the blob contents specified by |prefix_bytes|.
+  This is in the form of {<full ref>: <gen num> ...}
+
+  >>> get_num_tree('\x83\xb4')
+  {'\x83\xb4\xe3\xe4W\xf9J*\x8f/c\x16\xecD\xd1\x04\x8b\xa9qz': 169, ...}
+  """
   if prefix_bytes[-1:] not in get_par_elms(prefix_bytes[:-1]):
     return {}
 
@@ -133,6 +150,15 @@ def get_num_tree(prefix_bytes):
 
 
 def intern_num_tree(tree):
+  """Transform a number tree (in the form returned by |get_num_tree|) into a
+  git blob.
+
+  Returns the git blob hash.
+
+  >>> d = {'\x83\xb4\xe3\xe4W\xf9J*\x8f/c\x16\xecD\xd1\x04\x8b\xa9qz': 169}
+  >>> intern_num_tree(d)
+  'c552317aa95ca8c3f6aae3357a4be299fbcb25ce'
+  """
   with tempfile.TemporaryFile() as f:
     for k, v in sorted(tree.iteritems()):
       f.write(struct.pack(CHUNK_FMT, k, v))
@@ -141,29 +167,37 @@ def intern_num_tree(tree):
 
 
 def get_num(ref):
+  """Takes a hash and returns the generation number for it or None."""
   return get_num_tree(ref[:2]).get(ref)
 
 
-def hexlify(s):
-  return s.decode('hex')
-
-
-def dehexlify(s):
-  return s.encode('hex')
-
-
 def set_num(ref, val):
+  """Updates the global state such that the generation number for |ref|
+  is |val|.
+
+  This change will not be saved to the git repo until finalize() is called.
+  """
   prefix = ref[:2]
   get_num_tree(prefix)[ref] = val
   DIRTY_TREES[prefix] += 1
 
 
 def group_prefix(items):
+  """Generator to group entries by prefix.
+
+  Args:
+    items - A iterable yielding data in the form of (name, value) sorted by
+            |name|.
+
+  |name| is expected to be a string of len >= 2.
+
+  This generator will yield lists of (name, value) pairs such that all of the
+  tuples in each emitted list wil share the same first 2 chars of |name|.
+  """
   group = []
   prefix = None
-  for obj in items:
-    name, value = obj
-    cur_prefix = name[:-2]
+  for name, value in items:
+    cur_prefix = name[:2]
     if prefix != cur_prefix:
       if group:
         yield group
@@ -182,6 +216,13 @@ def make_merged_tree(inc):
   tree_fmt = REF+':%s'
 
   def make_merged_tree_inner(group):
+    """Takes a group of (name, value) pairs such that the first 2 chars of all
+    the |name|s match (the 'prefix'), and value is a promise[blob hash]. The
+    function then returns a (subdir, promise[tree hash]).
+
+    The promised tree hash will be the merging of the existing tree at 'prefix',
+    plus any new blobs introduced by the current run.
+    """
     name, _ = group[0]
     ret_name = name[:2]
 
@@ -198,15 +239,24 @@ def make_merged_tree(inc):
 def make_flat_file(inc):
   pool = multiprocessing.Pool()
   def make_flat_file_inner(prefix_count):
+    """Takes a (prefix, count) where |prefix| is a 2 byte string designating a
+    path to the flat-file blob (e.g. '\xab\xcd' -> 'ab/cd'), and |count| is the
+    number of new hashes to be merged into said blob.
+
+    Returns (dehexlify(|prefix|), promise[blob hash])
+    """
     prefix, count = prefix_count
     t = get_num_tree(prefix)
-    ret = prefix.encode('hex'), pool.apply_async(intern_num_tree, (t,))
+    ret = dehexlify(prefix), pool.apply_async(intern_num_tree, (t,))
     inc(count)
     return ret
   return make_flat_file_inner
 
 
 def finalize(target):
+  """After calculating the generation number for |target|, call finalize to
+  save all our work to the git repository.
+  """
   if not DIRTY_TREES:
     return
 
@@ -217,8 +267,7 @@ def finalize(target):
   total += len(set(x[:1] for x in DIRTY_TREES))
   fmt = 'Finalizing: (%%d/%d)' % total
 
-  status = StatusPrinter(fmt, use_lock=True)
-  status.start()
+  status = StatusPrinter(fmt)
 
   try:
     files = map(make_flat_file(status.inc), sorted(DIRTY_TREES.iteritems()))
@@ -236,63 +285,61 @@ def finalize(target):
     status.join()
 
 
-def gen_next_num(ref, *pars):
-  m_num = -1
-  for par in pars:
-    val = get_num(par)
-    if val is None:
-      return None
-    if val > m_num:
-      m_num = val
-  new_num = m_num + 1
-  set_num(ref, new_num)
-  return new_num
+def resolve(target):
+  """Return the generation number for target.
 
-
-def get_gen_num(ref, *pars):
-  num = get_num(ref)
+  As a side effect, record any new calculated data to the git repository.
+  """
+  num = get_num(target)
   if num is not None:
     return num
-  return gen_next_num(ref, *pars)
-
-
-def resolve(target):
-  load_status = StatusPrinter('Loading commits: %d')
-
-  opts = ['rev-list', '--topo-order', '--parents', '--reverse',
-          dehexlify(target), '^'+REF]
 
   rev_list = []
+
+  load_status = StatusPrinter('Loading commits: %d')
   try:
-    load_status.start()
-    for line in run_git_lines(*opts):
+    for line in run_git_lines('rev-list', '--topo-order', '--parents',
+                              '--reverse', dehexlify(target), '^'+REF):
       rev_list.append(map(hexlify, line.split()))
       load_status.inc()
   finally:
     load_status.join()
 
-  for toks in rev_list:
-    num = get_gen_num(*toks)
+  gen_status = StatusPrinter('Reticulating splines: (%%d/%d)' % len(rev_list))
+  try:
+    for toks in rev_list:
+      num = max([-1]+map(get_num, toks[1:])) + 1
+      set_num(toks[0], num)
+      gen_status.inc()
+  finally:
+    gen_status.join()
+
+  finalize(dehexlify(target))
 
   return num
 
 
-def main():
-  global VERBOSE
+def parse_options():
+  p = optparse.OptionParser(usage='%prog [options] [<committish>]')
+  p.add_option('-v', '--verbose', action='store_true')
+  opts, args = p.parse_args()
+
+  StatusPrinter.ENABLED = opts.verbose
+
+  if len(args) > 1:
+    p.error('May only specify one <committish> at a time.')
+
+  target = args[0] if args else 'HEAD'
+
   try:
-    sys.argv.remove('-v')
-    VERBOSE = True
-  except ValueError:
-    pass
+    return hexlify(git_hash(target))
+  except CalledProcessError:
+    p.error("%r does not seem to be a valid commitish." % target)
 
-  target = hexlify(git_hash(sys.argv[1] if len(sys.argv) > 1 else 'HEAD'))
 
-  # try get_num because maybe we can get lucky :)
-  gen_num = get_num(target) or resolve(target)
+def main():
+  print resolve(parse_options())
 
-  finalize(dehexlify(target))
-
-  print gen_num
 
 if __name__ == '__main__':
   main()
