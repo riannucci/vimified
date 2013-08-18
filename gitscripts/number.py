@@ -1,10 +1,22 @@
 #!/usr/bin/env python
 
+# Monkeypatch IMapIterator so that Ctrl-C can kill everything properly.
+# Derived from https://gist.github.com/aljungberg/626518
+import multiprocessing.pool
+from multiprocessing.pool import IMapIterator
+def wrapper(func):
+  def wrap(self, timeout=None):
+    return func(self, timeout=timeout or 1e100)
+  return wrap
+IMapIterator.next = wrapper(IMapIterator.next)
+IMapIterator.__next__ = IMapIterator.next
+
 import collections
+import contextlib
 import functools
-import multiprocessing
 import optparse
 import os
+import signal
 import struct
 import subprocess
 import sys
@@ -14,21 +26,30 @@ import threading
 from common import git_hash, run_git, git_intern_f, git_tree
 from common import git_mktree, CalledProcessError
 
-BLOB = 'blob'
-BLOB_MOD = '100644'
+
 CHUNK_FMT = '!20sL'
 CHUNK_SIZE = struct.calcsize(CHUNK_FMT)
 DIRTY_TREES = collections.defaultdict(int)
 REF = 'refs/number/commits'
-ROOT_TREE = None
-TREE = 'tree'
-TREE_MOD = '040000'
 PREFIX_LEN = 1
 
 
 hexlify = lambda s: s.decode('hex')
 dehexlify = lambda s: s.encode('hex')
 pathlify = lambda s: '/'.join('%02x' % ord(b) for b in s)
+
+
+@contextlib.contextmanager
+def ScopedPool(*args, **kwargs):
+  kwargs['initializer'] = signal.signal
+  kwargs['initargs'] = (signal.SIGINT, signal.SIG_IGN)
+  pool = multiprocessing.pool.Pool(*args, **kwargs)
+  try:
+    yield pool
+    pool.close()
+  finally:
+    pool.terminate()
+    pool.join()
 
 
 class StatusPrinter(object):
@@ -159,7 +180,7 @@ def set_num(ref, val):
   return val
 
 
-UPDATE_IDX_FMT = '%s %s %%s\t%%s\0' % (BLOB_MOD, BLOB)
+UPDATE_IDX_FMT = '100644 blob %s\t%s\0'
 def leaf_map_fn(prefix_tree):
   pre, tree = prefix_tree
   return UPDATE_IDX_FMT % (intern_num_tree(tree), pathlify(pre))
@@ -174,7 +195,6 @@ def finalize(target):
 
   msg = 'git-number Added %s numbers' % sum(DIRTY_TREES.itervalues())
 
-  leaf_pool = multiprocessing.Pool()
 
   idx = os.path.join(run_git('rev-parse', '--git-dir'), 'number.idx')
   env = {'GIT_INDEX_FILE': idx}
@@ -185,9 +205,12 @@ def finalize(target):
     prefixes_trees = ((p, get_num_tree(p)) for p in sorted(DIRTY_TREES))
     updater = subprocess.Popen(['git', 'update-index', '-z', '--index-info'],
                                stdin=subprocess.PIPE, env=env)
-    for item in leaf_pool.imap(leaf_map_fn, prefixes_trees):
-      updater.stdin.write(item)
-      inc()
+
+    with ScopedPool() as leaf_pool:
+      for item in leaf_pool.imap(leaf_map_fn, prefixes_trees):
+        updater.stdin.write(item)
+        inc()
+
     updater.stdin.close()
     updater.wait()
 
@@ -215,36 +238,34 @@ def resolve(target):
     ref = run_git('commit-tree', '-m', 'Initial commit from git-number', empty)
     run_git('update-ref', REF, ref)
 
-  pool = multiprocessing.Pool()
+  with ScopedPool() as pool:
+    available = pool.apply_async(git_tree, args=(REF,), kwds={'recurse': True})
+    preload = set()
+    rev_list = []
 
-  available = pool.apply_async(git_tree, args=(REF,), kwds={'recurse': True})
-  preload = set()
-  rev_list = []
-
-  with StatusPrinter('Loading commits: %d') as inc:
-    for line in run_git('rev-list', '--topo-order', '--parents',
-                       '--reverse', dehexlify(target), '^'+REF).splitlines():
-      toks = map(hexlify, line.split())
-      rev_list.append((toks[0], toks[1:]))
-      preload.update(t[:PREFIX_LEN] for t in toks)
-      inc()
-
-  preload.intersection_update(
-    hexlify(k.replace('/', ''))
-    for k in available.get().iterkeys()
-  )
-  preload.difference_update((x,) for x in get_num_tree.cache)
-
-  if preload:
-    preload_iter = pool.imap_unordered(preload_tree, preload)
-    with StatusPrinter('Preloading nurbs: (%%d/%d)' % len(preload)) as inc:
-      for prefix, tree in preload_iter:
-        get_num_tree.cache[prefix,] = tree
+    with StatusPrinter('Loading commits: %d') as inc:
+      for line in run_git('rev-list', '--topo-order', '--parents',
+                         '--reverse', dehexlify(target), '^'+REF).splitlines():
+        toks = map(hexlify, line.split())
+        rev_list.append((toks[0], toks[1:]))
+        preload.update(t[:PREFIX_LEN] for t in toks)
         inc()
+
+    preload.intersection_update(
+      hexlify(k.replace('/', ''))
+      for k in available.get().iterkeys()
+    )
+    preload.difference_update((x,) for x in get_num_tree.cache)
+
+    if preload:
+      preload_iter = pool.imap_unordered(preload_tree, preload)
+      with StatusPrinter('Preloading nurbs: (%%d/%d)' % len(preload)) as inc:
+        for prefix, tree in preload_iter:
+          get_num_tree.cache[prefix,] = tree
+          inc()
 
   get_num_tree.default_enabled = True
 
-  pool.close()
 
   for ref, pars in rev_list:
     num = set_num(ref, max(map(get_num, pars)) + 1 if pars else 0)
@@ -273,7 +294,10 @@ def parse_options():
 
 
 def main():
-  print resolve(parse_options())
+  try:
+    print resolve(parse_options())
+  except KeyboardInterrupt:
+    pass
 
 
 if __name__ == '__main__':
