@@ -98,10 +98,13 @@ def git_intern_f(f, kind='blob'):
   return ret
 
 
-def git_tree(treeish):
+def git_tree(treeish, recurse=False):
   ret = {}
+  opts = ['ls-tree', '--full-tree', treeish]
+  if recurse:
+    opts += ['-r']
   try:
-    for line in run_git('ls-tree', '-z', '--full-tree', treeish).split('\0'):
+    for line in run_git(*opts).splitlines():
       if not line:
         continue
       mode, typ, ref, name = line.split()
