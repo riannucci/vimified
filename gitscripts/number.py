@@ -12,7 +12,7 @@ import tempfile
 import threading
 
 from common import git_hash, run_git, git_intern_f, git_tree
-from common import git_mktree, run_git_lines, CalledProcessError
+from common import git_mktree, CalledProcessError
 
 BLOB = 'blob'
 BLOB_MOD = '100644'
@@ -115,11 +115,9 @@ def get_num_tree(prefix_bytes):
   p = subprocess.Popen(['git', 'cat-file', 'blob', ref],
                         stdout=subprocess.PIPE, stderr=subprocess.PIPE)
   p.stderr.close()
-  while True:
-    raw_ent = p.stdout.read(CHUNK_SIZE)
-    if not raw_ent:
-      break
-    ref, num = struct.unpack(CHUNK_FMT, raw_ent)
+  raw = buffer(p.stdout.read())
+  for i in xrange(len(raw) / CHUNK_SIZE):
+    ref, num = struct.unpack_from(CHUNK_FMT, raw, i * CHUNK_SIZE)
     ret[ref] = num
 
   return ret
@@ -187,7 +185,7 @@ def finalize(target):
     prefixes_trees = ((p, get_num_tree(p)) for p in sorted(DIRTY_TREES))
     updater = subprocess.Popen(['git', 'update-index', '-z', '--index-info'],
                                stdin=subprocess.PIPE, env=env)
-    for item in leaf_pool.imap(leaf_map_fn, prefixes_trees, chunksize=32):
+    for item in leaf_pool.imap(leaf_map_fn, prefixes_trees):
       updater.stdin.write(item)
       inc()
     updater.stdin.close()
@@ -224,8 +222,8 @@ def resolve(target):
   rev_list = []
 
   with StatusPrinter('Loading commits: %d') as inc:
-    for line in run_git_lines('rev-list', '--topo-order', '--parents',
-                              '--reverse', dehexlify(target), '^'+REF):
+    for line in run_git('rev-list', '--topo-order', '--parents',
+                       '--reverse', dehexlify(target), '^'+REF).splitlines():
       toks = map(hexlify, line.split())
       rev_list.append((toks[0], toks[1:]))
       preload.update(t[:PREFIX_LEN] for t in toks)

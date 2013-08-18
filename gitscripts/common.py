@@ -40,41 +40,6 @@ def check_output(*popenargs, **kwargs):
   return output
 
 
-def yield_stdout(*popenargs, **kwargs):
-  with tempfile.TemporaryFile() as err_file:
-    kwargs['stdout'] = subprocess.PIPE
-    kwargs['stderr'] = err_file
-    kwargs['stdin'] = subprocess.PIPE
-
-    process = subprocess.Popen(*popenargs, **kwargs)
-    process.stdin.close()
-
-    l = ' '
-    while l:
-      l = process.stdout.readline()
-      if not l:
-        break
-      yield l.strip()
-
-    retcode = process.wait()
-
-    err_file.seek(0)
-    out_err = err_file.read()
-
-  if retcode:
-    cmd = kwargs.get('args')
-    if cmd is None:
-      cmd = popenargs[0]
-    raise CalledProcessError(retcode, cmd, out_err=out_err)
-
-
-def run_git_lines(*cmd, **kwargs):
-  cmd = ('git',) + cmd
-  if VERBOSE:
-    print cmd
-  return yield_stdout(cmd, **kwargs)
-
-
 def run_git(*cmd, **kwargs):
   cmd = ('git',) + cmd
   if VERBOSE:
@@ -107,7 +72,7 @@ def git_tree(treeish, recurse=False):
     for line in run_git(*opts).splitlines():
       if not line:
         continue
-      mode, typ, ref, name = line.split()
+      mode, typ, ref, name = line.split(None, 4)
       ret[name] = (mode, typ, ref)
   except CalledProcessError:
     return None
