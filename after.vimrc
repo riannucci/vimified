@@ -134,9 +134,9 @@ function s:FixExecutable()
   endif
 endfunction
 
-filetype on
-filetype plugin indent on
-au FileType python set ts=2 sts=2 sw=2
+au FileType python setlocal ts=2 sts=2 sw=2
+au FileType go setlocal listchars=tab:\ \ ,eol:¬,extends:❯,precedes:❮,trail:␣
+au FileType go setlocal noexpandtab
 
 if executable('/usr/local/bin/git')
   let g:fugitive_git_executable='/usr/local/bin/git'

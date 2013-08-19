@@ -33,7 +33,7 @@ endif
 " }}}
 
 " VUNDLE {{{
-set rtp+=~/.vim/bundle/vundle/
+set rtp+=~/.vim/bundle/vundle/,$GOROOT/misc/vim
 call vundle#rc()
 
 Bundle 'gmarik/vundle'
