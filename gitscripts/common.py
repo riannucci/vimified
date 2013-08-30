@@ -170,6 +170,10 @@ def run_git(*cmd, **kwargs):
   return ret
 
 
+def cat_blob(ref, f):
+  subprocess.check_call(['git', 'cat-file', 'blob', ref], stdout=f)
+
+
 def abbrev(ref):
   return run_git('rev-parse', '--abbrev-ref', ref)
 

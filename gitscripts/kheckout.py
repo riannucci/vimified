@@ -3,11 +3,10 @@
 import multiprocessing
 import os
 import shutil
-import subprocess
 import sys
 
 from common import parse_one_committish, dehexlify, git_tree, ScopedPool
-from common import run_git, CalledProcessError, StatusPrinter
+from common import run_git, CalledProcessError, StatusPrinter, cat_blob
 
 
 FMT = "Checked out %%d/%d files"
@@ -34,7 +33,7 @@ def place_file(path, mode, ref):
       flags |= os.O_BINARY
     fd = os.open(path, flags, mode)
     try:
-      subprocess.check_call(['git', 'cat-file', 'blob', ref], stdout=fd)
+      cat_blob(ref, fd)
     finally:
       os.close(fd)
   except CalledProcessError as e:
