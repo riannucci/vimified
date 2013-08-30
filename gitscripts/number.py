@@ -1,30 +1,14 @@
 #!/usr/bin/env python
 
-# Monkeypatch IMapIterator so that Ctrl-C can kill everything properly.
-# Derived from https://gist.github.com/aljungberg/626518
-import multiprocessing.pool
-from multiprocessing.pool import IMapIterator
-def wrapper(func):
-  def wrap(self, timeout=None):
-    return func(self, timeout=timeout or 1e100)
-  return wrap
-IMapIterator.next = wrapper(IMapIterator.next)
-IMapIterator.__next__ = IMapIterator.next
-
 import collections
-import contextlib
-import functools
-import optparse
 import os
-import signal
 import struct
 import subprocess
-import sys
 import tempfile
-import threading
 
 from common import git_hash, run_git, git_intern_f, git_tree
-from common import git_mktree, CalledProcessError
+from common import git_mktree, StatusPrinter, hexlify, dehexlify, pathlify
+from common import parse_one_committish, ScopedPool, memoize_deco
 
 
 CHUNK_FMT = '!20sL'
@@ -34,95 +18,6 @@ REF = 'refs/number/commits'
 PREFIX_LEN = 1
 
 
-hexlify = lambda s: s.decode('hex')
-dehexlify = lambda s: s.encode('hex')
-pathlify = lambda s: '/'.join('%02x' % ord(b) for b in s)
-
-
-@contextlib.contextmanager
-def ScopedPool(*args, **kwargs):
-  kwargs['initializer'] = signal.signal
-  kwargs['initargs'] = (signal.SIGINT, signal.SIG_IGN)
-  pool = multiprocessing.pool.Pool(*args, **kwargs)
-  try:
-    yield pool
-    pool.close()
-  finally:
-    pool.terminate()
-    pool.join()
-
-
-class StatusPrinter(object):
-  """Threaded single-stat status message printer."""
-  ENABLED = False
-
-  def __init__(self, fmt):
-    """
-    Create a StatusPrinter.
-
-    Call .start() to get it going.
-
-    Args:
-      fmt - String format with a single '%d' where the counter value should go.
-    """
-    self.fmt = fmt
-    self._count = 0
-    self._dead = False
-    self._dead_cond = threading.Condition()
-    self._thread = threading.Thread(target=self._run)
-
-  def _emit(self, s):
-    if self.ENABLED:
-      sys.stderr.write('\r'+s)
-      sys.stderr.flush()
-
-  def _run(self):
-    with self._dead_cond:
-      while not self._dead:
-        self._emit(self.fmt % self._count)
-        self._dead_cond.wait(.5)
-      self._emit((self.fmt+'\n') % self._count)
-
-  def inc(self, amount=1):
-    self._count += amount
-
-  def __enter__(self):
-    self._thread.start()
-    return self.inc
-
-  def __exit__(self, _exc_type, _exc_value, _traceback):
-    self._dead = True
-    with self._dead_cond:
-      self._dead_cond.notifyAll()
-    self._thread.join()
-    del self._thread
-
-
-def memoize_deco(default=None):
-  def memoize_(f):
-    """Decorator to memoize a pure function taking 0 or more positional args."""
-    cache = {}
-
-    @functools.wraps(f)
-    def inner(*args):
-      ret = cache.get(args)
-      if ret is None:
-        if default and inner.default_enabled:
-          ret = default()
-          cache[args] = ret
-        else:
-          ret = f(*args)
-          if ret is not None:
-            cache[args] = ret
-      return ret
-    inner.cache = cache
-    inner.default_enabled = False
-
-    return inner
-  return memoize_
-
-
-@memoize_deco(dict)
 def get_num_tree(prefix_bytes):
   """Return a dictionary of the blob contents specified by |prefix_bytes|.
   This is in the form of {<full ref>: <gen num> ...}
@@ -275,27 +170,9 @@ def resolve(target):
   return num
 
 
-def parse_options():
-  p = optparse.OptionParser(usage='%prog [options] [<committish>]')
-  p.add_option('-v', '--verbose', action='store_true')
-  opts, args = p.parse_args()
-
-  StatusPrinter.ENABLED = opts.verbose
-
-  if len(args) > 1:
-    p.error('May only specify one <committish> at a time.')
-
-  target = args[0] if args else 'HEAD'
-
-  try:
-    return hexlify(git_hash(target))
-  except CalledProcessError:
-    p.error("%r does not seem to be a valid commitish." % target)
-
-
 def main():
   try:
-    print resolve(parse_options())
+    print resolve(parse_one_committish())
   except KeyboardInterrupt:
     pass
 

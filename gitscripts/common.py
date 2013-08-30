@@ -1,6 +1,21 @@
+# Monkeypatch IMapIterator so that Ctrl-C can kill everything properly.
+# Derived from https://gist.github.com/aljungberg/626518
+import multiprocessing.pool
+from multiprocessing.pool import IMapIterator
+def wrapper(func):
+  def wrap(self, timeout=None):
+    return func(self, timeout=timeout or 1e100)
+  return wrap
+IMapIterator.next = wrapper(IMapIterator.next)
+IMapIterator.__next__ = IMapIterator.next
+
+import contextlib
+import functools
+import signal
 import subprocess
 import sys
 import tempfile
+import threading
 
 VERBOSE = '--verbose' in sys.argv
 if VERBOSE:
@@ -21,6 +36,110 @@ class CalledProcessError(Exception):
     return (
         'Command "%s" returned non-zero exit status %d' %
         (self.cmd, self.returncode))
+
+
+def memoize_deco(default=None):
+  def memoize_(f):
+    """Decorator to memoize a pure function taking 0 or more positional args."""
+    cache = {}
+
+    @functools.wraps(f)
+    def inner(*args):
+      ret = cache.get(args)
+      if ret is None:
+        if default and inner.default_enabled:
+          ret = default()
+          cache[args] = ret
+        else:
+          ret = f(*args)
+          if ret is not None:
+            cache[args] = ret
+      return ret
+    inner.cache = cache
+    inner.default_enabled = False
+
+    return inner
+  return memoize_
+
+
+@contextlib.contextmanager
+def ScopedPool(*args, **kwargs):
+  kwargs['initializer'] = signal.signal
+  kwargs['initargs'] = (signal.SIGINT, signal.SIG_IGN)
+  pool = multiprocessing.pool.Pool(*args, **kwargs)
+  try:
+    yield pool
+    pool.close()
+  except:
+    pool.terminate()
+    raise
+  finally:
+    pool.join()
+
+
+class StatusPrinter(object):
+  """Threaded single-stat status message printer."""
+  ENABLED = VERBOSE
+
+  def __init__(self, fmt):
+    """
+    Create a StatusPrinter.
+
+    Call .start() to get it going.
+
+    Args:
+      fmt - String format with a single '%d' where the counter value should go.
+    """
+    self.fmt = fmt
+    self._count = 0
+    self._dead = False
+    self._dead_cond = threading.Condition()
+    self._thread = threading.Thread(target=self._run)
+
+  def _emit(self, s):
+    if self.ENABLED:
+      sys.stderr.write('\r'+s)
+      sys.stderr.flush()
+
+  def _run(self):
+    with self._dead_cond:
+      while not self._dead:
+        self._emit(self.fmt % self._count)
+        self._dead_cond.wait(.5)
+      self._emit((self.fmt+'\n') % self._count)
+
+  def inc(self, amount=1):
+    self._count += amount
+
+  def __enter__(self):
+    self._thread.start()
+    return self.inc
+
+  def __exit__(self, _exc_type, _exc_value, _traceback):
+    self._dead = True
+    with self._dead_cond:
+      self._dead_cond.notifyAll()
+    self._thread.join()
+    del self._thread
+
+
+hexlify = lambda s: s.decode('hex')
+dehexlify = lambda s: s.encode('hex')
+pathlify = lambda s: '/'.join('%02x' % ord(b) for b in s)
+
+
+def parse_one_committish():
+  if len(sys.argv) > 2:
+    print >> sys.stderr, 'May only specify one <committish> at a time.'
+    sys.exit(1)
+
+  target = sys.argv[1] if len(sys.argv) > 1 else 'HEAD'
+
+  try:
+    return hexlify(git_hash(target))
+  except CalledProcessError:
+    print >> sys.stderr, '%r does not seem to be a valid commitish.' % target
+    sys.exit(1)
 
 
 def check_output(*popenargs, **kwargs):
@@ -65,14 +184,15 @@ def git_intern_f(f, kind='blob'):
 
 def git_tree(treeish, recurse=False):
   ret = {}
-  opts = ['ls-tree', '--full-tree', treeish]
+  opts = ['ls-tree', '--full-tree']
   if recurse:
     opts += ['-r']
+  opts.append(treeish)
   try:
     for line in run_git(*opts).splitlines():
       if not line:
         continue
-      mode, typ, ref, name = line.split(None, 4)
+      mode, typ, ref, name = line.split(None, 3)
       ret[name] = (mode, typ, ref)
   except CalledProcessError:
     return None
