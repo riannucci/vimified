@@ -68,10 +68,17 @@ def memoize_deco(default=None):
   return memoize_
 
 
+def initer(orig, orig_args):
+  signal.signal(signal.SIGINT, signal.SIG_IGN)
+  if orig:
+    orig(*orig_args)
+
+
 @contextlib.contextmanager
 def ScopedPool(*args, **kwargs):
-  kwargs['initializer'] = signal.signal
-  kwargs['initargs'] = (signal.SIGINT, signal.SIG_IGN)
+  orig, orig_args = kwargs.get('initializer'), kwargs.get('initargs', ())
+  kwargs['initializer'] = initer
+  kwargs['initargs'] = orig, orig_args
   pool = multiprocessing.pool.Pool(*args, **kwargs)
   try:
     yield pool

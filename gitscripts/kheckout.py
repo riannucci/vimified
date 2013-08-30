@@ -21,9 +21,10 @@ TREE_ROOT = None
 
 def init_repo():
   global REPO, TREE_ROOT
-  git_dir = run_git('rev-parse', '--git-dir')
-  REPO = pygit2.Repository(git_dir)
-  TREE_ROOT = REPO.revparse_single('HEAD').tree
+  if not REPO:
+    git_dir = run_git('rev-parse', '--git-dir')
+    REPO = pygit2.Repository(git_dir)
+    TREE_ROOT = REPO.revparse_single('HEAD').tree
 
 
 def mode_hex(path):
