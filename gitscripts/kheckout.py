@@ -28,13 +28,16 @@ def init_repo():
 
 
 def mode_hex(path):
-  cur = TREE_ROOT
-  toks = path.split(os.sep)
-  for tok in toks[:-1]:
-    ent = cur[tok]
-    cur = REPO[ent.oid]
-  ent = cur[toks[-1]]
-  return ent.filemode, ent.hex
+  try:
+    cur = TREE_ROOT
+    toks = path.split(os.sep)
+    for tok in toks[:-1]:
+      ent = cur[tok]
+      cur = REPO[ent.oid]
+    ent = cur[toks[-1]]
+    return ent.filemode, ent.hex
+  except Exception:
+    return None, None
 
 
 def place_file(path, mode, ref):
@@ -68,23 +71,32 @@ def fix_head(target):
     print e, e.out_err
 
 
-def handle_file(made_dirs, pool, inc, path, mode, ref):
+def handle_file_lookup(path):
+  handle_file(path, *mode_hex(path))
+
+
+def handle_file(path, filemode, ref):
+  if ref is None:
+    kill_it(path)
+  else:
+    mode_hi = filemode >> (3*3)
+    mode_lo = filemode & 0777
+    if mode_hi == 0100:  # blob
+      place_file(path, mode_lo, ref)
+    elif mode_hi == 0120:  # link
+      place_link(path, ref)
+    elif mode_hi == 0160:  # commit
+      make_dir(path)
+    else:
+      print 'I do not understand "%s": %o, %s' % (path, filemode, ref)
+      assert False
+
+
+def handle_dir(made_dirs, path):
   d = os.path.dirname(path)
   if d and d not in made_dirs:
     make_dir(d)
     made_dirs.add(d)
-
-  mode_hi = mode >> (3*3)
-  mode_lo = mode & 0777
-  if mode_hi == 0100:  # blob
-    pool.apply_async(place_file, (path, mode_lo, ref), callback=inc)
-  elif mode_hi == 0120:  # link
-    pool.apply_async(place_link, (path, ref), callback=inc)
-  elif mode_hi == 0160:  # commit
-    pool.apply_async(make_dir, (path,), callback=inc)
-  else:
-    print 'I do not understand "%s": %o, %s' % (path, mode, ref)
-    assert False
 
 
 def nuke_extras(all_files):
@@ -103,14 +115,16 @@ def nuke_extras(all_files):
 
 def force_checkout(tree):
   made_dirs = set()
-  fmt = FMT % len(tree)
+  fmt = FMT % (len(tree) + 1)
   with StatusPrinter(fmt) as inc:
     ign_inc = lambda *_: inc()
     with ScopedPool(PROC_COUNT, initializer=init_repo) as pool:
       pool.apply_async(nuke_extras, (tree,), callback=ign_inc)
 
       for path, (mode, _, ref) in tree.iteritems():
-        handle_file(made_dirs, pool, ign_inc, path, int(mode, 8), ref)
+        handle_dir(made_dirs, path)
+        pool.apply_async(handle_file, (path, int(mode, 8), ref),
+                         callback=ign_inc)
 
 
 def kill_it(path):
@@ -136,16 +150,14 @@ def fancy_checkout():
   with StatusPrinter(fmt) as inc:
     ign_inc = lambda *_: inc()
     with ScopedPool(PROC_COUNT, initializer=init_repo) as pool:
-      for mode, pathish in (x.split(None, 1) for x in f_diff if x):
-        if mode[0] in 'DM':
-          handle_file(made_dirs, pool, ign_inc, pathish, *mode_hex(pathish))
-        elif mode[0] in 'A?':
-          pool.apply_async(kill_it, (pathish,), callback=ign_inc)
+      for mode, path in (x.split(None, 1) for x in f_diff if x):
+        # technically, path could be 'from\0to', but that only happens for
+        # rename and copy status we don't support.
+        if mode[0] in 'DMA?':
+          handle_dir(made_dirs, path)
+          pool.apply_async(handle_file_lookup, (path,), callback=ign_inc)
         else:
-          print (
-            "I do not understand WAT IS HAPPEN TO ME!? %s %s"
-            % (mode, pathish)
-          )
+          print ("Got unexpected mode: %s %s" % (mode, path))
           assert False
 
 
@@ -160,7 +172,6 @@ def main():
   print 'Got Target: %s' % target
   fix_head(target)
   run_git('reset', '-q', target)
-  init_repo()
 
   if force:
     force_checkout(git_tree(target, recurse=True))
