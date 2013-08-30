@@ -16,6 +16,12 @@ import subprocess
 import sys
 import tempfile
 import threading
+import binascii
+
+
+hexlify = binascii.hexlify
+unhexlify = binascii.unhexlify
+pathlify = lambda s: '/'.join('%02x' % ord(b) for b in s)
 
 VERBOSE = '--verbose' in sys.argv
 if VERBOSE:
@@ -123,11 +129,6 @@ class StatusPrinter(object):
     del self._thread
 
 
-hexlify = lambda s: s.decode('hex')
-dehexlify = lambda s: s.encode('hex')
-pathlify = lambda s: '/'.join('%02x' % ord(b) for b in s)
-
-
 def parse_one_committish():
   if len(sys.argv) > 2:
     print >> sys.stderr, 'May only specify one <committish> at a time.'
@@ -136,7 +137,7 @@ def parse_one_committish():
   target = sys.argv[1] if len(sys.argv) > 1 else 'HEAD'
 
   try:
-    return hexlify(git_hash(target))
+    return unhexlify(git_hash(target))
   except CalledProcessError:
     print >> sys.stderr, '%r does not seem to be a valid commitish.' % target
     sys.exit(1)

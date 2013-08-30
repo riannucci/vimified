@@ -7,7 +7,7 @@ import subprocess
 import tempfile
 
 from common import git_hash, run_git, git_intern_f, git_tree
-from common import git_mktree, StatusPrinter, hexlify, dehexlify, pathlify
+from common import git_mktree, StatusPrinter, hexlify, unhexlify, pathlify
 from common import parse_one_committish, ScopedPool, memoize_deco
 
 
@@ -140,14 +140,14 @@ def resolve(target):
 
     with StatusPrinter('Loading commits: %d') as inc:
       for line in run_git('rev-list', '--topo-order', '--parents',
-                         '--reverse', dehexlify(target), '^'+REF).splitlines():
-        toks = map(hexlify, line.split())
+                         '--reverse', hexlify(target), '^'+REF).splitlines():
+        toks = map(unhexlify, line.split())
         rev_list.append((toks[0], toks[1:]))
         preload.update(t[:PREFIX_LEN] for t in toks)
         inc()
 
     preload.intersection_update(
-      hexlify(k.replace('/', ''))
+      unhexlify(k.replace('/', ''))
       for k in available.get().iterkeys()
     )
     preload.difference_update((x,) for x in get_num_tree.cache)
@@ -165,7 +165,7 @@ def resolve(target):
   for ref, pars in rev_list:
     num = set_num(ref, max(map(get_num, pars)) + 1 if pars else 0)
 
-  finalize(dehexlify(target))
+  finalize(hexlify(target))
 
   return num
 
