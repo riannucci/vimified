@@ -159,8 +159,10 @@ def check_output(*popenargs, **kwargs):
   return output
 
 
+GIT_EXE = 'git.bat' if sys.platform.startswith('win') else 'git'
+
 def run_git(*cmd, **kwargs):
-  cmd = ('git',) + cmd
+  cmd = (GIT_EXE,) + cmd
   if VERBOSE:
     print cmd
   ret = check_output(cmd, **kwargs)
