@@ -11,7 +11,7 @@ from common import run_git, CalledProcessError, StatusPrinter
 
 
 FMT = "Checked out %%d/%d files"
-PROC_COUNT = multiprocessing.cpu_count()*2
+PROC_COUNT = multiprocessing.cpu_count()
 FLAGS = os.O_WRONLY | os.O_CREAT | os.O_TRUNC
 if sys.platform.startswith('win'):
   FLAGS |= os.O_BINARY

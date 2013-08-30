@@ -76,10 +76,14 @@ def initer(orig, orig_args):
 
 @contextlib.contextmanager
 def ScopedPool(*args, **kwargs):
-  orig, orig_args = kwargs.get('initializer'), kwargs.get('initargs', ())
-  kwargs['initializer'] = initer
-  kwargs['initargs'] = orig, orig_args
-  pool = multiprocessing.pool.Pool(*args, **kwargs)
+  if kwargs.pop('kind', None) == 'threads':
+    pool = multiprocessing.pool.ThreadPool(*args, **kwargs)
+  else:
+    orig, orig_args = kwargs.get('initializer'), kwargs.get('initargs', ())
+    kwargs['initializer'] = initer
+    kwargs['initargs'] = orig, orig_args
+    pool = multiprocessing.pool.Pool(*args, **kwargs)
+
   try:
     yield pool
     pool.close()
