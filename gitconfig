@@ -22,6 +22,7 @@
   rpr    = !~/.vim/gitscripts/rp.py origin/master
   mbt    = !~/.vim/gitscripts/mbt.py
   number = !~/.vim/gitscripts/number.py
+  rename = !~/.vim/gitscripts/rename.py
 [credential]
   helper = osxkeychain
 [push]
