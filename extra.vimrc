@@ -24,3 +24,5 @@ endif
 
 Bundle 'Lokaltog/powerline'
 set rtp+=~/.vim/bundle/powerline/powerline/bindings/vim
+
+Bundle 'arsenerei/vim-ragel'
