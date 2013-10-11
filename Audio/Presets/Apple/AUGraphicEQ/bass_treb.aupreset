@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>Num EQ Bands</key>
+	<integer>31</integer>
+	<key>data</key>
+	<data>
+	AAAAAAAAAAAAAAAgAAAAAEDGSfwAAAABQK9ERAAAAAJAnjM0AAAAA0CBfSgAAAAEQFTu
+	8AAAAAVAEKqoAAAABj+A+kAAAAAHvtiIgAAAAAi/kSfgAAAACb+m2AAAAAAKv2WC4AAA
+	AAu/BmZgAAAADAAAAAAAAAANAAAAAAAAAA4AAAAAAAAADwAAAAAAAAAQAAAAAAAAABEA
+	AAAAAAAAEgAAAAAAAAATAAAAAAAAABQAAAAAAAAAFQAAAAAAAAAWP1WwYAAAABc/oFsA
+	AAAAGEBAAAAAAAAZAAAAAAAAABq//7vAAAAAG8DAAAAAAAAcP/tgwAAAAB1BEH0oAAAA
+	HkFJxxwAACcQP4AAAA==
+	</data>
+	<key>manufacturer</key>
+	<integer>1634758764</integer>
+	<key>name</key>
+	<string>bass_treb</string>
+	<key>subtype</key>
+	<integer>1735550321</integer>
+	<key>type</key>
+	<integer>1635083896</integer>
+	<key>version</key>
+	<integer>0</integer>
+</dict>
+</plist>
