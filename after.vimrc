@@ -77,9 +77,6 @@ let g:SuperTabClosePreviewOnPopupClose = 1
 
 imap ,. <Plug>snipMateNextOrTrigger
 smap ,. <Plug>snipMateNextOrTrigger
-let g:snipMate = {}
-let g:snipMate.scope_aliases = {}
-let g:snipMate.scope_aliases['htmldjango'] = 'htmldjango,xhtml,html,javascript'
 
 let g:pymode_options_indent = 0
 let g:pymode_rope = 0
