@@ -17,7 +17,7 @@ DIRTY_TREES = collections.defaultdict(int)
 REF = 'refs/number/commits'
 PREFIX_LEN = 1
 
-
+@memoize_deco()
 def get_num_tree(prefix_bytes):
   """Return a dictionary of the blob contents specified by |prefix_bytes|.
   This is in the form of {<full ref>: <gen num> ...}
