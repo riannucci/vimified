@@ -1,13 +1,17 @@
 #!/usr/bin/env python
 import sys
 
-from common import current_branch, branches, upstream, run_git
+from common import current_branch, branches, upstream, run_git, git_hash
 
 
 def main(argv):
   assert len(argv) == 1, "No arguments expected"
+  upfn = upstream
   cur = current_branch()
-  downstreams = [b for b in branches() if upstream(b) == cur]
+  if cur == 'HEAD':
+    upfn = lambda b: git_hash(upstream(b))
+    cur = git_hash(cur)
+  downstreams = [b for b in branches() if upfn(b) == cur]
   if not downstreams:
     return "No downstream branches"
   elif len(downstreams) == 1:

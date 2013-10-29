@@ -41,3 +41,27 @@ then
 fi
 
 export SSH_AUTH_SOCK=~/.byobu/.ssh-agent
+
+function git-down() {
+  git down < /dev/tty
+  echo
+  git smap
+  zle reset-prompt
+}
+function git-up() {
+  git up &> /dev/null
+  echo
+  git smap
+  zle reset-prompt
+}
+function git-smap() {
+  echo
+  git smap
+  zle reset-prompt
+}
+zle -N git-down
+zle -N git-up
+zle -N git-smap
+bindkey '\C-B' git-up
+bindkey '\C-F' git-down
+bindkey '\C-T' git-smap

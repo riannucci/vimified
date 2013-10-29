@@ -25,6 +25,7 @@
   rename = !~/.vim/gitscripts/rename.py
   up     = checkout @{u}
   down   = !~/.vim/gitscripts/down.py
+  smap   = !~/.vim/gitscripts/smap.py
 [credential]
   helper = osxkeychain
 [push]
