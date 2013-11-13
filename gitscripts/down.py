@@ -18,6 +18,7 @@ def main(argv):
     run_git('checkout', downstreams[0])
   else:
     high = len(downstreams) - 1
+    print
     while True:
       print "Please select a downstream branch"
       for i, b in enumerate(downstreams):

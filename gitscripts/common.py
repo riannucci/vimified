@@ -194,6 +194,10 @@ def git_hash(reflike):
   return run_git('rev-parse', reflike)
 
 
+def git_hashes(*reflikes):
+  return run_git('rev-parse', *reflikes).splitlines()
+
+
 def git_intern_f(f, kind='blob'):
   ret = run_git('hash-object', '-t', kind, '-w', '--stdin', stdin=f)
   f.close()

@@ -4,11 +4,12 @@ import sys
 
 from colorama import Fore, Style
 
-from common import current_branch, branches, upstream, git_hash
+from common import current_branch, branches, upstream, git_hash, git_hashes
 
 
-def print_branch(cur, cur_hash, branch, par_map, branch_map, depth=0):
-  branch_hash = git_hash(branch)
+def print_branch(cur, cur_hash, branch, branch_hashes, par_map, branch_map,
+                 depth=0):
+  branch_hash = branch_hashes[branch]
   if branch.startswith('origin'):
     color = Fore.RED
   elif branch_hash == cur_hash:
@@ -23,7 +24,8 @@ def print_branch(cur, cur_hash, branch, par_map, branch_map, depth=0):
 
   print color + "  "*depth + branch + (" *" if branch == cur else "")
   for child in par_map.pop(branch, ()):
-    print_branch(cur, cur_hash, child, par_map, branch_map, depth=depth+1)
+    print_branch(cur, cur_hash, child, branch_hashes, par_map, branch_map,
+                 depth=depth+1)
 
 
 def main(argv):
@@ -36,11 +38,16 @@ def main(argv):
     par_map[par].append(branch)
 
   current = current_branch()
-  current_hash = git_hash(current)
+  hashes = git_hashes(current, *branch_map.keys())
+  current_hash = hashes[0]
+  par_hashes = {k: hashes[i+1] for i, k in enumerate(branch_map.iterkeys())}
   while par_map:
     for parent in par_map:
       if parent not in branch_map:
-        print_branch(current, current_hash, parent, par_map, branch_map)
+        if parent not in par_hashes:
+          par_hashes[parent] = git_hash(parent)
+        print_branch(current, current_hash, parent, par_hashes, par_map,
+                     branch_map)
         break
 
 
