@@ -17,7 +17,7 @@ def main():
     all_branches.remove(current)
   all_tags = set(tags())
   try:
-    for line in sys.stdin.readlines():
+    for line in sys.stdin.xreadlines():
       start = line.find(GREEN+' (')
       end   = line.find(')', start)
       if start != -1 and end != -1:
