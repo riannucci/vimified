@@ -13,27 +13,14 @@ filetype off
 let mapleader = ","
 let maplocalleader = "\\"
 
-" PACKAGE LIST {{{
-" Use this variable inside your local configuration to declare
-" which package you would like to include
-if ! exists('g:vimified_packages')
-    let g:vimified_packages = ['general', 'fancy', 'os', 'coding', 'ruby', 'html', 'css', 'js', 'clojure', 'haskell', 'color']
-endif
-" }}}
-
-" VUNDLE {{{
 set rtp+=~/.vim/bundle/vundle/,$GOROOT/misc/vim
 call vundle#rc()
 
 Bundle 'gmarik/vundle'
-" }}}
 
-" PACKAGES {{{
-
-"
-"
 if !has('win32')
   Bundle "Valloric/YouCompleteMe"
+  nnoremap <silent><space> :YcmCompleter GoToDefinitionElseDeclaration<cr>
 endif
 
 Bundle "bronson/vim-visual-star-search"
@@ -95,7 +82,6 @@ cnoremap <c-a> <home>
 cnoremap <c-e> <end>
 
 
-" Settings {{{
 set autoread
 set backspace=indent,eol,start
 set binary
@@ -129,10 +115,8 @@ set backup
 set noswapfile
 " _ }}}
 
-set modelines=0
 set noeol
 set relativenumber
-set numberwidth=10
 set ruler
 if executable('/bin/zsh')
   set shell=/bin/zsh
@@ -146,25 +130,49 @@ set matchtime=2
 
 set completeopt=longest,menuone,preview
 
-" White characters {{{
 set autoindent
-set tabstop=2
-set softtabstop=2
-set textwidth=80
-set shiftwidth=2
-set expandtab
-set wrap
 set formatoptions=qrn1
 set colorcolumn=+1
-" }}}
 
 set visualbell
 
-set wildignore=.svn,CVS,.git,.hg,*.o,*.a,*.class,*.mo,*.la,*.so,*.obj,*.swp,*.jpg,*.png,*.xpm,*.gif,.DS_Store,*.aux,*.out,*.toc
-set wildmenu
 
 set dictionary=/usr/share/dict/words
-" }}}
+
+set tabstop=2
+set textwidth=80
+set shiftwidth=2
+set softtabstop=2
+set smarttab
+
+" Stop the crazy margins :D
+set numberwidth=2
+
+" Modelines
+set modeline
+set modelines=5
+
+set expandtab
+
+set nowrap
+
+set wildmenu
+set wildignore=.svn,CVS,.git,.hg,*.o,*.a,*.class,*.mo,*.la,*.so,*.obj,*.swp,*.jpg,*.png,*.xpm,*.gif,.DS_Store,*.aux,*.out,*.toc
+set wildmode=list:longest,full
+
+set tildeop
+
+set foldlevelstart=99
+
+set guifont=DejaVu_Sans_Mono_for_Powerline:h11:cANSI
+
+" For tagbar to update highlighted element faster
+set ut=1000
+
+" Search upwards until there's a tags file
+set tags+=./tags;
+
+set mouse=a
 
 " Cursorline {{{
 " Only show cursorline in the current window and in normal mode.
@@ -227,14 +235,7 @@ nnoremap <silent> <leader>h3 :execute '3match InterestingWord3 /\<<c-r><c-w>\>/'
 
 " }}}
 
-" . folding {{{
-
-set foldlevelstart=0
 set foldmethod=syntax
-
-" Space to toggle folds.
-nnoremap <space> za
-vnoremap <space> za
 
 " Make zO recursively open whatever top level fold we're in, no matter where the
 " cursor happens to be.
@@ -243,7 +244,7 @@ nnoremap zO zCzO
 " Use ,z to "focus" the current fold.
 nnoremap <leader>z zMzvzz
 
-function! MyFoldText() " {{{
+function! MyFoldText()
     let line = getline(v:foldstart)
 
     let nucolwidth = &fdc + &number * &numberwidth
@@ -257,10 +258,8 @@ function! MyFoldText() " {{{
     let line = strpart(line, 0, windowwidth - 2 -len(foldedlinecount))
     let fillcharcount = windowwidth - len(line) - len(foldedlinecount)
     return line . '…' . repeat(" ",fillcharcount) . foldedlinecount . '…' . ' '
-endfunction " }}}
+  endfunction
 set foldtext=MyFoldText()
-
-" }}}
 
 " _ Vim {{{
 augroup ft_vim
@@ -270,11 +269,7 @@ augroup ft_vim
     au FileType help setlocal textwidth=78
     au BufWinEnter *.txt if &ft == 'help' | wincmd L | endif
 augroup END
-" }}}
 
-" EXTENSIONS {{{
-
-" }}}
 
 " Buffer Handling {{{
 " Visit http://vim.wikia.com/wiki/Deleting_a_buffer_without_closing_the_window
@@ -353,10 +348,93 @@ endfunction
 command! -bang -complete=buffer -nargs=? Bclose call s:Bclose('<bang>', '<args>')
 nnoremap <silent> <Leader>bd :Bclose<CR>
 
-" }}}
 
-" Load addidional configuration (ie to overwrite shorcuts) {{{
-if filereadable(expand("~/.vim/after.vimrc"))
-  source ~/.vim/after.vimrc
+" Tagbar mapping interferes with Align
+nunmap <Leader>t
+nmap   <Leader>, :TagbarToggle<CR>
+let g:tagbar_autoclose=1
+
+
+" Shift-arrows work like you would kinda expect them to :)
+imap <S-Up>    <esc>v<Up>
+imap <S-Down>  <esc>v<Down>
+imap <S-Left>  <esc>v<Left>
+imap <S-Right> <esc>v<Right>
+nmap <S-Up>    v<Up>
+nmap <S-Down>  v<Down>
+nmap <S-Left>  v<Left>
+nmap <S-Right> v<Right>
+vmap <S-Up>    <Up>
+vmap <S-Down>  <Down>
+vmap <S-Left>  <Left>
+vmap <S-Right> <Right>
+
+" Make Page keys only go by half the screen.
+map! <PageUp> <C-U>
+map! <PageDown> <C-F>
+
+" Let's stick with hybrid for now
+" colorscheme distinguished
+hi! Operator guifg=#cc6666 ctermfg=9 guibg=NONE ctermbg=NONE gui=NONE term=NONE
+
+if !has('mac') && !has('win32unix') && has('unix')
+  let g:ackprg="ack-grep -H --nocolor --nogroup --column"
 endif
-" }}}
+
+let g:ctrlp_extensions = ['tag', 'buffertag']
+let g:ctrlp_custom_ignore = '\.pyc$'
+
+" Strip tagfiles up to 64MB
+let g:autotagmaxTagsFileSize = 1024*1024*64
+
+" Go find first django_project and do the omnidance :)
+let s:proj_file=findfile(".django_project", ';')
+if !empty(s:proj_file)
+  let $DJANGO_SETTINGS_MODULE=readfile(s:proj_file)[0]
+  python "sys.path.append(os.getcwd())"
+endif
+
+" Reset cursor to last pos in file
+function! ResCur()
+  if line("'\"") <= line("$")
+    normal! g`"
+    return 1
+  endif
+endfunction
+
+augroup resCur
+  autocmd!
+  autocmd BufWinEnter * call ResCur()
+augroup END
+
+" auto-close the python preview pane
+autocmd InsertLeave * if pumvisible() == 0|pclose|endif
+
+for f in split(glob('~/.vim/syntax_checkers/*.vim'), '\n')
+      exe 'source' f
+endfor
+
+set rtp+=~/.vim
+
+if has('win32')
+  " Maximize, baby!
+  autocmd GUIEnter * simalt ~X
+endif
+
+au! BufRead,BufNewFile *.ninja set filetype=ninja
+au! BufWritePost *.py,*.sh silent call s:FixExecutable()
+function s:FixExecutable()
+  if strpart(getline(1), 0, 2) == '#!'
+    !chmod +x %
+  else
+    !chmod -x %
+  endif
+endfunction
+
+au FileType python setlocal ts=2 sts=2 sw=2
+au FileType go setlocal listchars=tab:\ \ ,eol:¬,extends:❯,precedes:❮,trail:␣
+au FileType go setlocal noexpandtab
+
+if executable('/usr/local/bin/git')
+  let g:fugitive_git_executable='/usr/local/bin/git'
+endif
