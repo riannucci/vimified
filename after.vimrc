@@ -70,20 +70,6 @@ endif
 let g:ctrlp_extensions = ['tag', 'buffertag']
 let g:ctrlp_custom_ignore = '\.pyc$'
 
-let g:SuperTabDefaultCompletionType = "context"
-let g:SuperTabLongestEnhanced = 1
-let g:SuperTabLongestHighlight = 1
-let g:SuperTabClosePreviewOnPopupClose = 1
-
-imap ,. <Plug>snipMateNextOrTrigger
-smap ,. <Plug>snipMateNextOrTrigger
-
-let g:pymode_options_indent = 0
-let g:pymode_rope = 0
-
-" Let syntastic handle linting
-let g:pymode_lint_write = 0
-
 " Strip tagfiles up to 64MB
 let g:autotagmaxTagsFileSize = 1024*1024*64
 
@@ -139,4 +125,4 @@ if executable('/usr/local/bin/git')
   let g:fugitive_git_executable='/usr/local/bin/git'
 endif
 
-let g:ycm_extra_conf_globlist = ['~/s/*']
+nnoremap <silent><space> :YcmCompleter GoToDefinitionElseDeclaration<cr>

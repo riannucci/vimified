@@ -1,0 +1,40 @@
+snippet pl "pylint disable"
+# pylint: disable=${1}
+endsnippet
+
+snippet main "main"
+def main():
+  ${1}
+
+
+if __name__ == '__main__':
+  main()
+endsnippet
+
+snippet mainr "main return"
+import sys
+
+def main(argv):
+  ${1}
+  return 0
+
+
+if __name__ == '__main__':
+  sys.exit(main(sys.argv))
+endsnippet
+
+snippet mainu "unittest main"
+#!/usr/bin/env python
+import unittest
+
+class Test${1}(unittest.TestCase):
+  pass
+
+if __name__ == '__main__':
+  unittest.main()
+endsnippet
+
+snippet pdb "pdb breakpoint"
+  import pdb; pdb.set_trace()
+endsnippet
+
