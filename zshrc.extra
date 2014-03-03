@@ -43,7 +43,7 @@ fi
 export SSH_AUTH_SOCK=~/.byobu/.ssh-agent
 
 function git-down() {
-  stty sane < /dev/tty
+  stty sane < /dev/tty 2> /dev/null
   git down < /dev/tty
   echo
   git smap

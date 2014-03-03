@@ -28,6 +28,7 @@ Bundle "AutoTag"
 
 Bundle "SirVer/ultisnips"
 let g:UltiSnipsExpandTrigger="<leader>."
+let g:UltiSnipsJumpForwardTrigger="<leader>."
 
 Bundle "airblade/vim-gitgutter"
 
