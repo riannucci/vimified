@@ -9,24 +9,21 @@
 [color]
   ui = true
 [alias]
-  udiff  = !git diff $(git merge-base @{u} HEAD) --patience --word-diff=color --word-diff-regex='\\w+|[^[:space:]]' -C -C
-  map    = !git log --graph --full-history --branches --tags --remotes --color --date=short --pretty=format:'%C(red bold)%h%x09%Creset%C(green)%d%Creset %C(yellow)%ad%Creset ~ %s' $(git config iannucci.mapextra 2> /dev/null) "$@" | ~/.vim/gitscripts/pylog.py | less -R || true
-  reup   = !~/.vim/gitscripts/reup.py
-  squash = !~/.vim/gitscripts/squash.py
-  freeze = commit -am 'FREEZE'
-  thaw   = !((git log --pretty=%s -n1 | grep FREEZE -q) && git reset 'HEAD~') || echo 'Nothing to thaw.'
+  udiff  = upstream-diff
+  reup   = rebase-update
+  squash = squash-branch
   root   = checkout origin/master
-  nb     = checkout --track origin/master -b
-  tb     = checkout -tb
-  rp     = !~/.vim/gitscripts/rp.py
-  rpr    = !~/.vim/gitscripts/rp.py origin/master
-  mbt    = !~/.vim/gitscripts/mbt.py
-  number = !~/.vim/gitscripts/number.py
-  rename = !~/.vim/gitscripts/rename.py
-  up     = checkout @{u}
-  down   = !~/.vim/gitscripts/down.py
-  smap   = !~/.vim/gitscripts/smap.py
+  nb     = new-branch
+  tb     = new-branch --upstream_current
+  rp     = reparent-branch
+  rpr    = reparent-branch --root
+  rename = rename-branch
+  up     = nav-upstream
+  down   = nav-downstream
+  smap   = map-branches
 [credential]
   helper = osxkeychain
 [push]
   default = upstream
+[depot-tools "upstream-diff"]
+	default-args = --wordwise
