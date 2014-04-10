@@ -27,6 +27,7 @@ Bundle "bronson/vim-visual-star-search"
 Bundle "AutoTag"
 
 Bundle "SirVer/ultisnips"
+Bundle "honza/vim-snippets"
 let g:UltiSnipsExpandTrigger="<leader>."
 let g:UltiSnipsJumpForwardTrigger="<leader>."
 
@@ -65,6 +66,8 @@ autocmd FileType gitcommit set tw=68 spell
 
 Bundle 'w0ng/vim-hybrid'
 
+Bundle 'kchmck/vim-coffee-script'
+
 filetype plugin indent on
 colorscheme hybrid
 syntax on
@@ -85,7 +88,6 @@ cnoremap <c-e> <end>
 
 set autoread
 set backspace=indent,eol,start
-set binary
 set cinoptions=:0,(s,u0,U1,g0,t0
 set completeopt=menuone,preview
 set encoding=utf-8
@@ -435,7 +437,10 @@ endfunction
 au FileType python setlocal ts=2 sts=2 sw=2
 au FileType go setlocal listchars=tab:\ \ ,eol:¬,extends:❯,precedes:❮,trail:␣
 au FileType go setlocal noexpandtab
+au FileType go autocmd BufWritePre <buffer> Fmt
 
 if executable('/usr/local/bin/git')
   let g:fugitive_git_executable='/usr/local/bin/git'
 endif
+
+vmap <silent> R :sort<cr>
