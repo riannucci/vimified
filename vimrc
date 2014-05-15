@@ -19,7 +19,11 @@ call vundle#rc()
 Bundle 'gmarik/vundle'
 
 if !has('win32')
-  Bundle "Valloric/YouCompleteMe"
+  if filereadable(expand('~/.at_work'))
+    source ~/.vimrc_at_work
+  else
+    Bundle 'Valloric/YouCompleteMe'
+  endif
   nnoremap <silent><space> :YcmCompleter GoToDefinitionElseDeclaration<cr>
 endif
 
