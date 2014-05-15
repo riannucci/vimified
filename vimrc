@@ -83,6 +83,8 @@ Bundle 'w0ng/vim-hybrid'
 
 Bundle 'kchmck/vim-coffee-script'
 
+Bundle 'nsf/gocode'
+
 filetype plugin indent on
 colorscheme hybrid
 syntax on
