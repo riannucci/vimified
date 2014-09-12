@@ -20,7 +20,7 @@
   rename = rename-branch
   up     = nav-upstream
   down   = nav-downstream
-  smap   = map-branches
+  smap   = map-branches -vv
 [credential]
   helper = osxkeychain
 [push]
