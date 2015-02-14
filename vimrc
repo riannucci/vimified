@@ -13,7 +13,7 @@ filetype off
 let mapleader = ","
 let maplocalleader = "\\"
 
-set rtp+=~/.vim/bundle/vundle/,$GOROOT/misc/vim
+set rtp+=~/.vim/bundle/vundle/
 call vundle#rc()
 
 Bundle 'gmarik/vundle'
@@ -28,7 +28,6 @@ if !has('win32')
 endif
 
 Bundle "bronson/vim-visual-star-search"
-Bundle "AutoTag"
 
 Bundle "SirVer/ultisnips"
 Bundle "honza/vim-snippets"
@@ -68,8 +67,14 @@ nmap <leader>t :TagbarToggle<CR>
 Bundle 'tpope/vim-fugitive'
 
 Bundle 'scrooloose/syntastic'
-let g:syntastic_enable_signs=1
+let g:syntastic_aggregate_errors = 1
+let g:syntastic_always_populate_loc_list=1
 let g:syntastic_auto_loc_list=1
+let g:syntastic_enable_signs=1
+let g:syntastic_error_symbol = "✗"
+let g:syntastic_go_checkers = ['go', 'govet']
+let g:syntastic_loc_list_height=5
+let g:syntastic_warning_symbol = "⚠"
 
 Bundle 'hynek/vim-python-pep8-indent'
 
@@ -83,11 +88,15 @@ Bundle 'w0ng/vim-hybrid'
 
 Bundle 'kchmck/vim-coffee-script'
 
-Bundle 'nsf/gocode'
+Bundle 'fatih/vim-go'
+let g:go_fmt_options = '-s=true -e=true'
 
 filetype plugin indent on
 colorscheme hybrid
 syntax on
+
+hi SyntasticErrorSign ctermfg=160
+hi SyntasticWarningSign ctermfg=221
 
 " Set 5 lines to the cursor - when moving vertically
 set scrolloff=5
@@ -137,6 +146,7 @@ set noswapfile
 
 set noeol
 set relativenumber
+set number
 set ruler
 if executable('/bin/zsh')
   set shell=/bin/zsh
@@ -152,7 +162,7 @@ set completeopt=longest,menuone,preview
 
 set autoindent
 set formatoptions=qrn1
-set colorcolumn=+1
+let &colorcolumn="+1,".join(range(120,320), ",")
 
 set visualbell
 
@@ -454,7 +464,6 @@ endfunction
 au FileType python setlocal ts=2 sts=2 sw=2
 au FileType go setlocal listchars=tab:\ \ ,eol:¬,extends:❯,precedes:❮,trail:␣
 au FileType go setlocal noexpandtab
-au FileType go autocmd BufWritePre <buffer> Fmt
 
 if executable('/usr/local/bin/git')
   let g:fugitive_git_executable='/usr/local/bin/git'

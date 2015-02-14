@@ -36,13 +36,13 @@ endsnippet
 
 snippet #! "shebang!"
 #!/usr/bin/env python
-# Copyright 2014 The Chromium Authors. All rights reserved.
+# Copyright `date +%Y` The Chromium Authors. All rights reserved.
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 endsnippet
 
 snippet ## "comment"
-# Copyright 2014 The Chromium Authors. All rights reserved.
+# Copyright `date +%Y` The Chromium Authors. All rights reserved.
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 endsnippet
@@ -53,4 +53,30 @@ endsnippet
 
 snippet todo "todo comment"
 # TODO(iannucci): ${1}
+endsnippet
+
+snippet maini "infra __main__ template"
+# Copyright `date +%Y` The Chromium Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+"""${1}"""
+
+import argparse
+import sys
+
+
+def parse_args(argv):
+  p = argparse.ArgumentParser('./run.py %s' % __package__)
+  o = p.parse_args(argv)
+  return o
+
+
+def main(argv):
+  o = parse_args(argv)
+  return 0
+
+
+if __name__ == '__main__':
+  sys.exit(main(sys.argv[1:]))
 endsnippet
