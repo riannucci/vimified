@@ -469,4 +469,17 @@ if executable('/usr/local/bin/git')
   let g:fugitive_git_executable='/usr/local/bin/git'
 endif
 
-vmap <silent> R :sort<cr>
+function! Banner()
+python << EOF
+import vim
+fchar = "/"
+if vim.current.buffer.name.endswith((".py", ".sh")):
+  fchar = "#"
+cline = vim.current.line.strip().strip(fchar).strip()
+vim.current.line = (" %s " % cline).center(80, fchar)
+EOF
+endfunction
+
+command Banner call Banner()
+
+vmap <silent> R :sort i<cr>
