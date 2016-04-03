@@ -51,6 +51,8 @@ let g:airline_symbols.readonly = ''
 let g:airline_symbols.linenr = ''
 let g:airline_symbols.whitespace = 'Ξ'
 
+Bundle 'goldfeld/vim-seek'
+let g:seek_subst_disable = 1
 
 Bundle 'vim-scripts/Align'
 Bundle 'tpope/vim-endwise'
@@ -72,7 +74,7 @@ let g:syntastic_always_populate_loc_list=1
 let g:syntastic_auto_loc_list=1
 let g:syntastic_enable_signs=1
 let g:syntastic_error_symbol = "✗"
-let g:syntastic_go_checkers = ['go', 'govet']
+let g:syntastic_go_checkers = ['go', 'govet', 'golint']
 let g:syntastic_loc_list_height=5
 let g:syntastic_warning_symbol = "⚠"
 
@@ -92,6 +94,7 @@ Bundle 'fatih/vim-go'
 let g:go_fmt_options = '-s=true -e=true'
 
 filetype plugin indent on
+set background=dark
 colorscheme hybrid
 syntax on
 
