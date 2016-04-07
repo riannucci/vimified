@@ -2,18 +2,11 @@ bindkey '^?' backward-delete-char
 bindkey -a '/' history-incremental-search-backward
 bindkey -a 'v' edit-command-line
 
-bindkey -M viins "${terminfo[kcuu1]/O/[}" up-line-or-history
-bindkey -M viins "${terminfo[kcud1]/O/[}" down-line-or-history
+bindkey -M viins '${terminfo[kcuu1]/O/[}' up-line-or-history
+bindkey -M viins '${terminfo[kcud1]/O/[}' down-line-or-history
 
 setopt interactivecomments
 setopt extended_glob
-
-if [[ "$TERM" == "xterm" || "$TERM" == 'screen' ]]
-then
-  # No it isn't, it's gnome-terminal or byobu
-  REAL_TERM=$TERM
-  TERM=xterm-256color
-fi
 
 if which gdircolors > /dev/null
 then
@@ -33,14 +26,6 @@ alias l='ls -lX'
 alias ll='ls -laX'
 
 export EDITOR=vim
-
-if [[ ! -S ~/.byobu/.ssh-agent ]]
-then
-  eval "$(ssh-agent -t 10m)"
-  ln -sf $SSH_AUTH_SOCK ~/.byobu/.ssh-agent
-fi
-
-export SSH_AUTH_SOCK=~/.byobu/.ssh-agent
 
 function git-down() {
   stty sane < /dev/tty 2> /dev/null
