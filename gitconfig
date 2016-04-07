@@ -1,6 +1,7 @@
 # vim: ft=gitconfig:
 [user]
   name = Robert Iannucci
+	email = iannucci@google.com
 [core]
   autocrlf = false
   filemode = false
@@ -27,3 +28,7 @@
   default = upstream
 [depot-tools "upstream-diff"]
 	default-args = --wordwise
+[cache]
+  cachepath = /s/gitcache
+[http]
+  cookiefile = /usr/local/google/home/iannucci/.gitcookies
