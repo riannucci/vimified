@@ -7,68 +7,63 @@
 " Have fun!
 "
 
-set nocompatible
-filetype off
-
 let mapleader = ","
 let maplocalleader = "\\"
 
-set rtp+=~/.vim/bundle/vundle/
-call vundle#rc()
-
-Bundle 'gmarik/vundle'
+call plug#begin('~/.vim/plugged')
 
 if !has('win32')
   if filereadable(expand('~/.at_work'))
     source ~/.vimrc_at_work
   else
-    Bundle 'Valloric/YouCompleteMe'
+    Plug 'Valloric/YouCompleteMe', { 'do':  './install.py --gocode-completer'  }
   endif
   nnoremap <silent><space> :YcmCompleter GoToDefinitionElseDeclaration<cr>
 endif
 
-Bundle "bronson/vim-visual-star-search"
+Plug 'bronson/vim-visual-star-search'
 
-Bundle "SirVer/ultisnips"
-Bundle "honza/vim-snippets"
+Plug 'SirVer/ultisnips'
+Plug 'honza/vim-snippets'
 let g:UltiSnipsExpandTrigger="<leader>."
 let g:UltiSnipsJumpForwardTrigger="<leader>."
 
-Bundle "airblade/vim-gitgutter"
+Plug 'airblade/vim-gitgutter'
 
-Bundle "ehamberg/vim-cute-python"
+Plug 'ehamberg/vim-cute-python', { 'branch': 'moresymbols' }
 
-Bundle 'bling/vim-airline'
-if !exists('g:airline_symbols')
-  let g:airline_symbols = {}
-endif
-let g:airline_left_sep = ''
-let g:airline_left_alt_sep = ''
-let g:airline_right_sep = ''
-let g:airline_right_alt_sep = ''
-let g:airline_symbols.branch = ''
-let g:airline_symbols.readonly = ''
-let g:airline_symbols.linenr = ''
-let g:airline_symbols.whitespace = 'Ξ'
+Plug 'bling/vim-airline'
+let g:airline_powerline_fonts=1
 
-Bundle 'goldfeld/vim-seek'
+Plug 'goldfeld/vim-seek'
 let g:seek_subst_disable = 1
 
-Bundle 'vim-scripts/Align'
-Bundle 'tpope/vim-endwise'
-Bundle 'tpope/vim-repeat'
-Bundle 'tpope/vim-speeddating'
-Bundle 'tpope/vim-surround'
-Bundle 'tpope/vim-unimpaired'
+Plug 'vim-scripts/Align'
+Plug 'tpope/vim-endwise'
+Plug 'tpope/vim-repeat'
+Plug 'tpope/vim-speeddating'
+Plug 'tpope/vim-surround'
+Plug 'tpope/vim-unimpaired'
 
-Bundle 'kien/ctrlp.vim'
-
-Bundle 'majutsushi/tagbar'
+Plug 'majutsushi/tagbar'
 nmap <leader>t :TagbarToggle<CR>
 
-Bundle 'tpope/vim-fugitive'
+Plug 'tpope/vim-fugitive'
 
-Bundle 'scrooloose/syntastic'
+Plug 'junegunn/fzf', { 'dir': '~/.fzf', 'do': './install --all' }
+Plug 'junegunn/fzf.vim'
+
+function! s:fzf_statusline()
+  " Override statusline as you like
+  highlight fzf1 ctermfg=161 ctermbg=251
+  highlight fzf2 ctermfg=23 ctermbg=251
+  highlight fzf3 ctermfg=237 ctermbg=251
+  setlocal statusline=%#fzf1#\ >\ %#fzf2#fz%#fzf3#f
+endfunction
+
+autocmd! User FzfStatusLine call <SID>fzf_statusline()
+
+Plug 'scrooloose/syntastic'
 let g:syntastic_aggregate_errors = 1
 let g:syntastic_always_populate_loc_list=1
 let g:syntastic_auto_loc_list=1
@@ -78,25 +73,23 @@ let g:syntastic_go_checkers = ['go', 'govet', 'golint']
 let g:syntastic_loc_list_height=5
 let g:syntastic_warning_symbol = "⚠"
 
-Bundle 'hynek/vim-python-pep8-indent'
+Plug 'hynek/vim-python-pep8-indent'
 
-Bundle 'Raimondi/delimitMate'
+Plug 'Raimondi/delimitMate'
 let g:delimitMate_expand_space = 1
 let g:delimitMate_expand_cr = 1
 
 autocmd FileType gitcommit set tw=68 spell
 
-Bundle 'w0ng/vim-hybrid'
+Plug 'w0ng/vim-hybrid'
 
-Bundle 'kchmck/vim-coffee-script'
-
-Bundle 'fatih/vim-go'
+Plug 'fatih/vim-go'
 let g:go_fmt_options = '-s=true -e=true'
 
-filetype plugin indent on
+call plug#end()
+
 set background=dark
 colorscheme hybrid
-syntax on
 
 hi SyntasticErrorSign ctermfg=160
 hi SyntasticWarningSign ctermfg=221
@@ -114,16 +107,13 @@ noremap <silent><leader>/ :nohls<CR>
 cnoremap <c-a> <home>
 cnoremap <c-e> <end>
 
+tnoremap <Esc><Esc> <C-\><C-n>
 
-set autoread
-set backspace=indent,eol,start
+" Always copy/paste to/from the system clipboard
+set clipboard+=unnamedplus
+
 set cinoptions=:0,(s,u0,U1,g0,t0
-set completeopt=menuone,preview
-set encoding=utf-8
 set hidden
-set history=1000
-set incsearch
-set laststatus=2
 set list
 
 " Don't redraw while executing macros
@@ -138,14 +128,6 @@ set showbreak=↪
 set notimeout
 set ttimeout
 set ttimeoutlen=10
-
-" _ backups {{{
-set undodir=~/.vim/tmp/undo//     " undo files
-set backupdir=~/.vim/tmp/backup// " backups
-set directory=~/.vim/tmp/swap//   " swap files
-set backup
-set noswapfile
-" _ }}}
 
 set noeol
 set relativenumber
@@ -163,8 +145,7 @@ set matchtime=2
 
 set completeopt=longest,menuone,preview
 
-set autoindent
-set formatoptions=qrn1
+set formatoptions+=rn1
 let &colorcolumn="+1,".join(range(120,320), ",")
 
 set visualbell
@@ -176,7 +157,6 @@ set tabstop=2
 set textwidth=80
 set shiftwidth=2
 set softtabstop=2
-set smarttab
 
 " Stop the crazy margins :D
 set numberwidth=2
@@ -189,8 +169,7 @@ set expandtab
 
 set nowrap
 
-set wildmenu
-set wildignore=.svn,CVS,.git,.hg,*.o,*.a,*.class,*.mo,*.la,*.so,*.obj,*.swp,*.jpg,*.png,*.xpm,*.gif,.DS_Store,*.aux,*.out,*.toc
+set wildignore+=.svn,CVS,.git,.hg,*.o,*.a,*.class,*.mo,*.la,*.so,*.obj,*.swp,*.jpg,*.png,*.xpm,*.gif,.DS_Store,*.aux,*.out,*.toc,*.pyc,*.pb.go,*.gen.go
 set wildmode=list:longest,full
 
 set tildeop
@@ -198,14 +177,6 @@ set tildeop
 set foldlevelstart=99
 
 set guifont=DejaVu_Sans_Mono_for_Powerline:h11:cANSI
-
-" For tagbar to update highlighted element faster
-set ut=1000
-
-" Search upwards until there's a tags file
-set tags+=./tags;
-
-set mouse=a
 
 " Cursorline {{{
 " Only show cursorline in the current window and in normal mode.
@@ -241,7 +212,6 @@ set ignorecase
 set smartcase
 set showmatch
 set gdefault
-set hlsearch
 
 " Don't jump when using * for search
 nnoremap * *<c-o>

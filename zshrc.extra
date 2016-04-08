@@ -65,7 +65,7 @@ zle -N git-up
 zle -N git-smap
 bindkey '\C-B' git-up
 bindkey '\C-F' git-down
-bindkey '\C-T' git-smap
+bindkey '\C-X' git-smap
 
 function agl() {
   ag --group --heading --color "$@" | less -R
