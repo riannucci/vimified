@@ -34,13 +34,13 @@ alias ll='ls -laX'
 
 export EDITOR=vim
 
-if [[ ! -S ~/.byobu/.ssh-agent ]]
-then
-  eval "$(ssh-agent -t 10m)"
-  ln -sf $SSH_AUTH_SOCK ~/.byobu/.ssh-agent
-fi
-
-export SSH_AUTH_SOCK=~/.byobu/.ssh-agent
+#if [[ ! -S ~/.byobu/.ssh-agent ]]
+#then
+#  eval "$(ssh-agent -t 10m)"
+#  ln -sf $SSH_AUTH_SOCK ~/.byobu/.ssh-agent
+#fi
+#
+#export SSH_AUTH_SOCK=~/.byobu/.ssh-agent
 
 function git-down() {
   stty sane < /dev/tty 2> /dev/null

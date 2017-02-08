@@ -2,4 +2,4 @@ export ZSH_CUSTOM=~/vimified/zsh_custom
 
 ZSH_HIGHLIGHT_HIGHLIGHTERS=(main brackets pattern cursor)
 
-plugins=(github python fasd brew vi-mode vundle encode64 zsh-syntax-highlighting)
+plugins=(github python brew vi-mode encode64 zsh-syntax-highlighting bgnotify)

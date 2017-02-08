@@ -35,8 +35,7 @@ Plug 'ehamberg/vim-cute-python', { 'branch': 'moresymbols' }
 Plug 'bling/vim-airline'
 let g:airline_powerline_fonts=1
 
-Plug 'goldfeld/vim-seek'
-let g:seek_subst_disable = 1
+Plug 'justinmk/vim-sneak'
 
 Plug 'vim-scripts/Align'
 Plug 'tpope/vim-endwise'
@@ -52,16 +51,6 @@ Plug 'tpope/vim-fugitive'
 
 Plug 'junegunn/fzf', { 'dir': '~/.fzf', 'do': './install --all' }
 Plug 'junegunn/fzf.vim'
-
-function! s:fzf_statusline()
-  " Override statusline as you like
-  highlight fzf1 ctermfg=161 ctermbg=251
-  highlight fzf2 ctermfg=23 ctermbg=251
-  highlight fzf3 ctermfg=237 ctermbg=251
-  setlocal statusline=%#fzf1#\ >\ %#fzf2#fz%#fzf3#f
-endfunction
-
-autocmd! User FzfStatusLine call <SID>fzf_statusline()
 
 Plug 'scrooloose/syntastic'
 let g:syntastic_aggregate_errors = 1
@@ -85,6 +74,8 @@ Plug 'w0ng/vim-hybrid'
 
 Plug 'fatih/vim-go'
 let g:go_fmt_options = '-s=true -e=true'
+
+Plug 'vimwiki/vimwiki'
 
 call plug#end()
 
@@ -169,7 +160,7 @@ set expandtab
 
 set nowrap
 
-set wildignore+=.svn,CVS,.git,.hg,*.o,*.a,*.class,*.mo,*.la,*.so,*.obj,*.swp,*.jpg,*.png,*.xpm,*.gif,.DS_Store,*.aux,*.out,*.toc,*.pyc,*.pb.go,*.gen.go
+set wildignore+=.svn,CVS,.git,.hg,*.o,*.a,*.class,*.mo,*.la,*.so,*.obj,*.swp,*.jpg,*.png,*.xpm,*.gif,.DS_Store,*.aux,*.out,*.toc,*.pyc,*.pb.go,*.gen.go,pb.discovery.go
 set wildmode=list:longest,full
 
 set tildeop
@@ -456,3 +447,22 @@ endfunction
 command Banner call Banner()
 
 vmap <silent> R :sort i<cr>
+
+function! OutputSplitWindow(...)
+  " this function output the result of the Ex command into a split scratch buffer
+  let cmd = join(a:000, ' ')
+  let temp_reg = @"
+  redir @"
+  silent! execute cmd
+  redir END
+  let output = copy(@")
+  let @" = temp_reg
+  if empty(output)
+    echoerr "no output"
+  else
+    new
+    setlocal buftype=nofile bufhidden=wipe noswapfile nobuflisted
+    put! =output
+  endif
+endfunction
+command! -nargs=+ -complete=command Output call OutputSplitWindow(<f-args>)
