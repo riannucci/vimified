@@ -1,21 +1,21 @@
 #!/usr/bin/zsh -x
 cd
-if [[ ! -d vimified ]]
+if [[ ! -d .config/nvim ]]
 then
-  git clone --recursive git@github.com:riannucci/vimified.git
+  mkdir .config || true
+  git clone --recursive git@github.com:riannucci/vimified.git .config/nvim
 fi
 if [[ ! -d .oh-my-zsh ]]
 then
   curl -L https://github.com/robbyrussell/oh-my-zsh/raw/master/tools/install.sh | sh
+  ( mkdir -p .oh-my-zsh/custom/plugins &&
+    cd .oh-my-zsh/custom/plugins &&
+    git clone git://github.com/zsh-users/zsh-syntax-highlighting.git )
 fi
-( mkdir -p .oh-my-zsh/custom/plugins &&
-  cd .oh-my-zsh/custom/plugins &&
-  git clone git://github.com/zsh-users/zsh-syntax-highlighting.git )
 
-ln -sf vimified/ .config/nvim
-ln -sf vimified/xmodmap .xmodmap
-ln -sf vimified/ackrc .ackrc
-ln -sf vimified/gitconfig .gitconfig
+ln -sf .config/nvim/rando_dotfiles/xmodmap .xmodmap
+ln -sf .config/nvim/rando_dotfiles/ackrc .ackrc
+ln -sf .config/nvim/rando_dotfiles/gitconfig .gitconfig
 
 vim +PlugInstall +qa
 
@@ -26,11 +26,11 @@ if line('.') == 1
   q
 endif
 c
-source ~/vimified/zshrc.plugins
+source ~/.config/nvim/rando_dotfiles/zshrc.plugins
 .
 $
 a
-source ~/vimified/zshrc.extra
+source ~/.config/nvim/rando_dotfiles/zshrc.extra
 .
 wq
 EOH

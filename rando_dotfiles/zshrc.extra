@@ -20,7 +20,7 @@ then
   alias dircolors=gdircolors
   alias ls='gls --color=auto'
 fi
-eval $( dircolors -b ~/vimified/LS_COLORS/LS_COLORS )
+eval $( dircolors -b ~/.config/nvim/rando_dotfiles/LS_COLORS/LS_COLORS )
 
 if which cygstart > /dev/null
 then

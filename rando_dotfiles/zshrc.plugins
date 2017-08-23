@@ -1,4 +1,4 @@
-export ZSH_CUSTOM=~/vimified/zsh_custom
+export ZSH_CUSTOM=~/.config/nvim/rando_dotfiles/zsh_custom
 
 ZSH_HIGHLIGHT_HIGHLIGHTERS=(main brackets pattern cursor)
 

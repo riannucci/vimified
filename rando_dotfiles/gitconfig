@@ -4,8 +4,8 @@
 [core]
   autocrlf = false
   filemode = false
-  excludesfile = ~/vimified/gitexcludes
-  pager = ~/vimified/bin/less_helper
+  excludesfile = ~/.config/nvim/rando_dotfiles/gitexcludes
+  pager = ~/.config/nvim/rando_dotfiles/bin/less_helper
 [color]
   ui = true
 [alias]
@@ -21,8 +21,6 @@
   up     = nav-upstream
   down   = nav-downstream
   smap   = map-branches -vv
-[credential]
-  helper = osxkeychain
 [push]
   default = upstream
 [depot-tools "upstream-diff"]
