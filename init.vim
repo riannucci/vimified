@@ -22,6 +22,11 @@ Plug 'bronson/vim-visual-star-search'
 Plug 'SirVer/ultisnips'
 Plug 'honza/vim-snippets'
 
+" Can't use <tab> as it conflicts with YCM.
+let g:UltiSnipsExpandTrigger="<leader>."
+let g:UltiSnipsJumpForwardTrigger="<c-b>"
+let g:UltiSnipsJumpBackwardTrigger="<c-z>"
+
 Plug 'airblade/vim-gitgutter'
 
 Plug 'ehamberg/vim-cute-python', { 'branch': 'moresymbols' }

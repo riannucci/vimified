@@ -5,6 +5,8 @@ bindkey -a 'v' edit-command-line
 bindkey -M viins "${terminfo[kcuu1]/O/[}" up-line-or-history
 bindkey -M viins "${terminfo[kcud1]/O/[}" down-line-or-history
 
+alias -g GR='$(git rev-parse --show-toplevel)'
+
 setopt interactivecomments
 setopt extended_glob
 

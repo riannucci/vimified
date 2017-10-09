@@ -2,4 +2,4 @@ export ZSH_CUSTOM=~/.config/nvim/rando_dotfiles/zsh_custom
 
 ZSH_HIGHLIGHT_HIGHLIGHTERS=(main brackets pattern cursor)
 
-plugins=(github python brew vi-mode encode64 zsh-syntax-highlighting bgnotify)
+plugins=(github python brew vi-mode encode64 zsh-syntax-highlighting bgnotify globalias)
