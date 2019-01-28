@@ -74,7 +74,7 @@ let g:go_fmt_options = '-s=true -e=true'
 
 call plug#end()
 
-set background=dark
+set bg=dark
 colorscheme hybrid
 
 hi SyntasticErrorSign ctermfg=160
@@ -101,6 +101,8 @@ set clipboard+=unnamedplus
 set cinoptions=:0,(s,u0,U1,g0,t0
 set hidden
 set list
+
+set nojoinspaces
 
 " Don't redraw while executing macros
 set nolazyredraw

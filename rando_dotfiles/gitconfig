@@ -1,15 +1,17 @@
 # vim: ft=gitconfig:
 [user]
   name = Robert Iannucci
+  email = iannucci@chromium.org
 [core]
   autocrlf = false
   filemode = false
   excludesfile = ~/.config/nvim/rando_dotfiles/gitexcludes
   pager = ~/.config/nvim/rando_dotfiles/bin/less_helper
+	deltaBaseCacheLimit = 1G
 [color]
   ui = true
 [alias]
-  udiff  = upstream-diff
+  udiff  = upstream-diff --wordwise
   reup   = rebase-update
   squash = squash-branch
   root   = checkout origin/master
@@ -23,5 +25,5 @@
   smap   = map-branches -vv
 [push]
   default = upstream
-[depot-tools "upstream-diff"]
-	default-args = --wordwise
+[cache]
+	cachepath = /Users/iannucci/gitcache

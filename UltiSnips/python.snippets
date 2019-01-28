@@ -23,6 +23,24 @@ if __name__ == '__main__':
   sys.exit(main(sys.argv))
 endsnippet
 
+snippet maina "main argparse"
+import argparse
+import sys
+
+def parse_args(args):
+  parser = argparse.ArgumentParser()
+  parser.add_argument(${1})
+  return parser.parse_args(args)
+
+def main(args):
+  opts = parse_args(args)
+
+  return 0
+
+if __name__ == '__main__':
+  sys.exit(main(sys.argv[1:]))
+endsnippet
+
 snippet mainu "unittest main"
 #!/usr/bin/env python
 import unittest
@@ -41,10 +59,20 @@ snippet #! "shebang!"
 # found in the LICENSE file.
 endsnippet
 
-snippet ## "comment"
+snippet ## "copyright"
 # Copyright `date +%Y` The Chromium Authors. All rights reserved.
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
+
+
+endsnippet
+
+
+snippet ## "banner"
+################################################################################
+# ${1}
+################################################################################
+
 endsnippet
 
 snippet nocover "no cover pragma"
@@ -79,4 +107,12 @@ def main(argv):
 
 if __name__ == '__main__':
   sys.exit(main(sys.argv[1:]))
+endsnippet
+
+snippet ropw "read-only property pylint"
+# pylint: disable=W0212
+endsnippet
+
+snippet rop "read-only property"
+${1:name} = property(lambda self: self._$1)
 endsnippet
