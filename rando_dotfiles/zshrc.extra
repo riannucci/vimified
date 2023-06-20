@@ -1,3 +1,11 @@
+if which nvim > /dev/null
+then
+  alias vim=nvim
+  export EDITOR=nvim
+else
+  export EDITOR=vim
+fi
+
 bindkey '^?' backward-delete-char
 bindkey -a '/' history-incremental-search-backward
 bindkey -a 'v' edit-command-line
@@ -17,11 +25,7 @@ then
   TERM=xterm-256color
 fi
 
-if which gdircolors > /dev/null
-then
-  alias dircolors=gdircolors
-  alias ls='gls --color=auto'
-fi
+alias ls='ls --color=auto'
 eval $( dircolors -b ~/.config/nvim/rando_dotfiles/LS_COLORS/LS_COLORS )
 
 if which cygstart > /dev/null
@@ -33,8 +37,6 @@ export ACK_PAGER_COLOR='less -R'
 
 alias l='ls -lX'
 alias ll='ls -laX'
-
-export EDITOR=vim
 
 #if [[ ! -S ~/.byobu/.ssh-agent ]]
 #then

@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 
 import fcntl
 import os
@@ -8,44 +8,44 @@ import sys
 import termios
 
 def terminal_size():
-  h, w, _, _ = struct.unpack(
+  height, width, _, _ = struct.unpack(
       'HHHH',
       fcntl.ioctl(1, termios.TIOCGWINSZ,
                   struct.pack('HHHH', 0, 0, 0, 0)))
-  return w, h
+  return width, height
+
 
 def main():
-  try:
-    if len(sys.argv) > 1:
-      sys.argv[0] = 'less'
-      os.execvp('less', sys.argv)
+  if len(sys.argv) > 1:
+    sys.argv[0] = 'less'
+    os.execvp('less', sys.argv)
 
-    _, num_lines = terminal_size()
+  _, num_lines = terminal_size()
 
-    buf = []
-    for i, line in enumerate(sys.stdin):
-      buf.append(line)
-      if i > num_lines:
-        break
-    else:
-      for line in buf:
-        sys.stdout.write(line)
-      return
-
-    p = subprocess.Popen(['less'], stdin=subprocess.PIPE)
+  buf = []
+  for i, line in enumerate(sys.stdin):
+    buf.append(line)
+    if i > num_lines:
+      break
+  else:
     for line in buf:
-      p.stdin.write(line)
-
-    # It seems like there should be a non-userspace way to chain sys.stdin onto
-    # p.stdin, but I can't think of it at the moment.
-    for line in sys.stdin:
-      p.stdin.write(line)
-    p.stdin.close()
-
-    p.wait()
-    return p.returncode
-  except:
+      sys.stdout.write(line)
     return 0
+
+  try:
+    with subprocess.Popen(['less'], stdin=subprocess.PIPE, encoding='utf-8') as proc:
+      for line in buf:
+        proc.stdin.write(line)
+
+      # It seems like there should be a non-userspace way to chain sys.stdin onto
+      # proc.stdin, but I can't think of it at the moment.
+      for line in sys.stdin:
+        proc.stdin.write(line)
+      proc.stdin.close()
+
+      return proc.wait()
+  except BrokenPipeError:
+    pass
 
 if __name__ == '__main__':
   sys.exit(main())

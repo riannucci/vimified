@@ -1,6 +1,7 @@
 # vim: ft=gitconfig:
 [user]
   name = Robert Iannucci
+  email = iannucci@chromium.org
 [core]
   autocrlf = false
   filemode = false
@@ -17,11 +18,21 @@
   tb     = new-branch --upstream_current
   rp     = reparent-branch
   rpr    = reparent-branch --root
-  rename = rename-branch
+  rb     = rename-branch
   up     = nav-upstream
   down   = nav-downstream
   smap   = map-branches -vv
+[credential]
+  helper = osxkeychain
 [push]
   default = upstream
 [depot-tools "upstream-diff"]
 	default-args = --wordwise
+[google]
+	lastUpdateCheck = 20150720000000
+[http]
+	cookiefile = /Users/iannucci/.gitcookies
+[protocol]
+	version = 2
+[advice]
+  detachedHead = false

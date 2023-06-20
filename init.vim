@@ -12,73 +12,124 @@ let maplocalleader = "\\"
 
 call plug#begin('~/.config/nvim/plugged')
 
-if !has('win32')
-  Plug 'Valloric/YouCompleteMe', { 'do':  './install.py --gocode-completer'  }
-  nnoremap <silent><space> :YcmCompleter GoToDefinitionElseDeclaration<cr>
-endif
-
-Plug 'bronson/vim-visual-star-search'
-
-Plug 'SirVer/ultisnips'
-Plug 'honza/vim-snippets'
-
-" Can't use <tab> as it conflicts with YCM.
-let g:UltiSnipsExpandTrigger="<leader>."
-let g:UltiSnipsJumpForwardTrigger="<c-b>"
-let g:UltiSnipsJumpBackwardTrigger="<c-z>"
+"if !has('win32')
+"  Plug 'Valloric/YouCompleteMe', { 'do':  'nix-shell --run \"./install.py --go-completer --ts-completer\"'  }
+"  nnoremap <silent><space> :YcmCompleter GoToDefinitionElseDeclaration<cr>
+"  let g:ycm_extra_conf_globlist = ["/s/infra/infra/recipes-py/*"]
+"endif
 
 Plug 'airblade/vim-gitgutter'
-
+Plug 'bronson/vim-visual-star-search'
+Plug 'dense-analysis/ale'
 Plug 'ehamberg/vim-cute-python', { 'branch': 'moresymbols' }
-
-" commit pin is to work around https://github.com/vim-airline/vim-airline/issues/1532
-Plug 'vim-airline/vim-airline', { 'commit': '470e9870f13830580d1938a2dae1be5b6e43d92a' }
-let g:airline_powerline_fonts=1
-
-Plug 'justinmk/vim-sneak'
-
-Plug 'vim-scripts/Align'
-
-Plug 'tpope/vim-endwise'
+Plug 'HerringtonDarkholme/yats'
+Plug 'hrsh7th/cmp-buffer'
+Plug 'hrsh7th/cmp-nvim-lsp'
+Plug 'hrsh7th/nvim-cmp'
+Plug 'majutsushi/tagbar'
+Plug 'neovim/nvim-lspconfig'
+Plug 'nvim-treesitter/nvim-treesitter', {'do': ':TSUpdate'}
+Plug 'quangnguyen30192/cmp-nvim-ultisnips'
+Plug 'Raimondi/delimitMate'
+Plug 'riannucci/vim-python-pep8-indent'
+Plug 'sebdah/vim-delve'
+Plug 'SirVer/ultisnips'
 Plug 'tpope/vim-fugitive'
 Plug 'tpope/vim-repeat'
 Plug 'tpope/vim-speeddating'
 Plug 'tpope/vim-surround'
 Plug 'tpope/vim-unimpaired'
+Plug 'vim-airline/vim-airline'
+Plug 'w0ng/vim-hybrid'
 
-Plug 'majutsushi/tagbar'
+call plug#end()
+
+"ultisnips
+" Can't use <tab> as it conflicts with YCM.
+let g:UltiSnipsExpandTrigger="<leader>."
+let g:UltiSnipsJumpForwardTrigger="<c-b>"
+let g:UltiSnipsJumpBackwardTrigger="<c-z>"
+
+"pep8
+let g:python_pep8_indent_multiline_string=-2  " textwrap.dedent style
+let g:python_pep8_func_continuation=1
+
+"airline
+let g:airline_powerline_fonts=1
+
+"tagbar
 nmap <leader>t :TagbarToggle<CR>
 
-Plug 'scrooloose/syntastic'
-let g:syntastic_aggregate_errors = 1
-let g:syntastic_always_populate_loc_list=1
-let g:syntastic_auto_loc_list=1
-let g:syntastic_enable_signs=1
-let g:syntastic_error_symbol = "✗"
-let g:syntastic_go_checkers = ['go', 'govet', 'golint']
-let g:syntastic_loc_list_height=5
-let g:syntastic_warning_symbol = "⚠"
-
-Plug 'hynek/vim-python-pep8-indent'
-
-Plug 'Raimondi/delimitMate'
+"delimitMate
 let g:delimitMate_expand_space = 1
 let g:delimitMate_expand_cr = 1
 
+"ale
+let g:ale_sign_error = "✗"
+let g:ale_sign_warning = "⚠"
+nmap <silent> <leader>e :ALENext<cr>
+nmap <silent> <leader>E :ALEPrevious<cr>
+
 autocmd FileType gitcommit set tw=68 spell
 
-Plug 'w0ng/vim-hybrid'
+" lsp config
+lua <<EOF
+  -- Setup nvim-cmp.
+  local cmp = require'cmp'
 
-Plug 'fatih/vim-go'
-let g:go_fmt_options = '-s=true -e=true'
+  cmp.setup({
+    snippet = {
+      expand = function(args)
+        vim.fn["UltiSnips#Anon"](args.body)
+      end,
+    },
+    mapping = {
+      ['<Tab>'] = cmp.mapping(cmp.mapping.select_next_item(), { 'i', 's' }),
+      ['<Down>'] = cmp.mapping(cmp.mapping.select_next_item(), { 'i', 's' }),
+      ['<S-Tab>'] = cmp.mapping(cmp.mapping.select_prev_item(), { 'i', 's' }),
+      ['<Up>'] = cmp.mapping(cmp.mapping.select_prev_item(), { 'i', 's' }),
+      ['<C-d>'] = cmp.mapping.scroll_docs(-4),
+      ['<C-f>'] = cmp.mapping.scroll_docs(4),
+      ['<C-e>'] = cmp.mapping.close(),
+      ['<CR>'] = cmp.mapping.confirm { select = true },
+    },
+    sources = {
+      { name = 'nvim_lsp' },
+      { name = 'ultisnips' },
+      { name = 'buffer' },
+    }
+  })
 
-call plug#end()
+  -- Setup lspconfig.
+  require('lspconfig')['gopls'].setup {
+    on_attach = function(client, bufnr)
+      local function buf_set_keymap(...) vim.api.nvim_buf_set_keymap(bufnr, ...) end
+      local function buf_set_option(...) vim.api.nvim_buf_set_option(bufnr, ...) end
+
+      -- Enable completion triggered by <c-x><c-o>
+      buf_set_option('omnifunc', 'v:lua.vim.lsp.omnifunc')
+
+      -- Mappings.
+      local opts = { noremap=true, silent=true }
+
+      -- See `:help vim.lsp.*` for documentation on any of the below functions
+      buf_set_keymap('n', '<space>', '<cmd>lua vim.lsp.buf.definition()<CR>', opts)
+      buf_set_keymap('n', '<S-space>', '<cmd>lua vim.lsp.buf.declaration()<CR>', opts)
+      buf_set_keymap('n', '<C-space>', '<cmd>lua vim.lsp.buf.type_definition()<CR>', opts)
+    end,
+    capabilities = require('cmp_nvim_lsp').default_capabilities(vim.lsp.protocol.make_client_capabilities()),
+    settings = { gopls =  {
+      env = {CGO_ENABLED="0"}
+    }}
+  }
+EOF
+
 
 set background=dark
 colorscheme hybrid
 
-hi SyntasticErrorSign ctermfg=160
-hi SyntasticWarningSign ctermfg=221
+highlight! link ALEVirtualTextError Error
+highlight! link ALEVirtualTextWarning Todo
 
 " Set 5 lines to the cursor - when moving vertically
 set scrolloff=5
@@ -102,8 +153,7 @@ set cinoptions=:0,(s,u0,U1,g0,t0
 set hidden
 set list
 
-" Don't redraw while executing macros
-set nolazyredraw
+set lazyredraw
 
 " Disable the macvim toolbar
 set guioptions-=T
@@ -129,10 +179,10 @@ set secure
 
 set matchtime=2
 
-set completeopt=longest,menuone,preview
+set completeopt=menu,menuone,noselect
 
 set formatoptions+=rn1
-let &colorcolumn="+1,".join(range(120,320), ",")
+"let &colorcolumn="+1,".join(range(120,320), ",")
 
 set visualbell
 
@@ -159,8 +209,6 @@ set wildignore+=.svn,CVS,.git,.hg,*.o,*.a,*.class,*.mo,*.la,*.so,*.obj,*.swp,*.j
 set wildmode=list:longest,full
 
 set tildeop
-
-set foldlevelstart=99
 
 set guifont=DejaVu_Sans_Mono_for_Powerline:h11:cANSI
 
@@ -206,10 +254,6 @@ nnoremap * *<c-o>
 nnoremap n nzzzv
 nnoremap N Nzzzv
 
-" Same when jumping around
-nnoremap g; g;zz
-nnoremap g, g,zz
-
 " Open a Quickfix window for the last search.
 nnoremap <silent> <leader>? :execute 'vimgrep /'.@/.'/g %'<CR>:copen<CR>
 
@@ -223,41 +267,6 @@ nnoremap <silent> <leader>h3 :execute '3match InterestingWord3 /\<<c-r><c-w>\>/'
 " }}}
 
 " }}}
-
-set foldmethod=syntax
-
-" Make zO recursively open whatever top level fold we're in, no matter where the
-" cursor happens to be.
-nnoremap zO zCzO
-
-" Use ,z to "focus" the current fold.
-nnoremap <leader>z zMzvzz
-
-function! MyFoldText()
-    let line = getline(v:foldstart)
-
-    let nucolwidth = &fdc + &number * &numberwidth
-    let windowwidth = winwidth(0) - nucolwidth - 3
-    let foldedlinecount = v:foldend - v:foldstart
-
-    " expand tabs into spaces
-    let onetab = strpart('          ', 0, &tabstop)
-    let line = substitute(line, '\t', onetab, 'g')
-
-    let line = strpart(line, 0, windowwidth - 2 -len(foldedlinecount))
-    let fillcharcount = windowwidth - len(line) - len(foldedlinecount)
-    return line . '…' . repeat(" ",fillcharcount) . foldedlinecount . '…' . ' '
-  endfunction
-set foldtext=MyFoldText()
-
-" _ Vim {{{
-augroup ft_vim
-    au!
-
-    au FileType vim setlocal foldmethod=marker
-    au FileType help setlocal textwidth=78
-    au BufWinEnter *.txt if &ft == 'help' | wincmd L | endif
-augroup END
 
 
 " Buffer Handling {{{
@@ -343,21 +352,6 @@ nunmap <Leader>t
 nmap   <Leader>, :TagbarToggle<CR>
 let g:tagbar_autoclose=1
 
-
-" Shift-arrows work like you would kinda expect them to :)
-imap <S-Up>    <esc>v<Up>
-imap <S-Down>  <esc>v<Down>
-imap <S-Left>  <esc>v<Left>
-imap <S-Right> <esc>v<Right>
-nmap <S-Up>    v<Up>
-nmap <S-Down>  v<Down>
-nmap <S-Left>  v<Left>
-nmap <S-Right> v<Right>
-vmap <S-Up>    <Up>
-vmap <S-Down>  <Down>
-vmap <S-Left>  <Left>
-vmap <S-Right> <Right>
-
 " Make Page keys only go by half the screen.
 map! <PageUp> <C-U>
 map! <PageDown> <C-F>
@@ -396,13 +390,6 @@ augroup resCur
   autocmd BufWinEnter * call ResCur()
 augroup END
 
-" auto-close the python preview pane
-autocmd InsertLeave * if pumvisible() == 0|pclose|endif
-
-for f in split(glob('~/.vim/syntax_checkers/*.vim'), '\n')
-      exe 'source' f
-endfor
-
 set rtp+=~/.vim
 
 if has('win32')
@@ -421,8 +408,10 @@ function s:FixExecutable()
 endfunction
 
 au FileType python setlocal ts=2 sts=2 sw=2
-au FileType go setlocal listchars=tab:\ \ ,eol:¬,extends:❯,precedes:❮,trail:␣
+
+au FileType go setlocal listchars=tab:\ \ ,eol:¬,extends:❯,precedes:❮
 au FileType go setlocal noexpandtab
+au BufWritePre *.go lua vim.lsp.buf.format({ async = false })
 
 if executable('/usr/local/bin/git')
   let g:fugitive_git_executable='/usr/local/bin/git'
