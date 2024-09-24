@@ -7,13 +7,14 @@
   filemode = false
   excludesfile = ~/.config/nvim/rando_dotfiles/gitexcludes
   pager = ~/.config/nvim/rando_dotfiles/bin/less_helper
+  untrackedCache=true
 [color]
   ui = true
 [alias]
-  udiff  = upstream-diff
+  udiff  = upstream-diff --wordwise
   reup   = rebase-update
   squash = squash-branch
-  root   = checkout origin/master
+  root   = checkout origin/HEAD
   nb     = new-branch
   tb     = new-branch --upstream_current
   rp     = reparent-branch
@@ -26,13 +27,19 @@
   helper = osxkeychain
 [push]
   default = upstream
-[depot-tools "upstream-diff"]
-	default-args = --wordwise
 [google]
 	lastUpdateCheck = 20150720000000
 [http]
 	cookiefile = /Users/iannucci/.gitcookies
 [protocol]
-	version = 2
+  version = 2
 [advice]
   detachedHead = false
+[mergetool "fugitive"]
+	cmd = nvim -f -c \"Gvdiffsplit!\" \"$MERGED\"
+[merge]
+	tool = fugitive
+[url "sso://chromium/"]
+	insteadOf = https://chromium.googlesource.com/
+[depot-tools]
+	useNewAuthStack = 1
