@@ -74,3 +74,21 @@ bindkey '\C-X' git-smap
 function agl() {
   ag --group --heading --color "$@" | less -R
 }
+
+function cookieswap() {
+  if [[ -e ~/.gitcookies ]] then
+    mv ~/.gitcookies ~/.nocookie
+    print Cookies $fg_bold[red]Off
+  else
+    mv ~/.nocookie ~/.gitcookies
+    print Cookies $fg_bold[green]On
+  fi
+}
+
+function cookies() {
+  if [[ -e ~/.gitcookies ]] then
+    print Cookies $fg_bold[green]On
+  else
+    print Cookies $fg_bold[red]Off
+  fi
+}

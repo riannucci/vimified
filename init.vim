@@ -10,29 +10,28 @@
 let mapleader = ","
 let maplocalleader = "\\"
 
-call plug#begin('~/.config/nvim/plugged')
+packadd cfilter
 
-"if !has('win32')
-"  Plug 'Valloric/YouCompleteMe', { 'do':  'nix-shell --run \"./install.py --go-completer --ts-completer\"'  }
-"  nnoremap <silent><space> :YcmCompleter GoToDefinitionElseDeclaration<cr>
-"  let g:ycm_extra_conf_globlist = ["/s/infra/infra/recipes-py/*"]
-"endif
+let &spellfile=expand('<sfile>:p:h') . '/dict.utf-8.add'
+
+call plug#begin('~/.config/nvim/plugged')
 
 Plug 'airblade/vim-gitgutter'
 Plug 'bronson/vim-visual-star-search'
-Plug 'dense-analysis/ale'
 Plug 'ehamberg/vim-cute-python', { 'branch': 'moresymbols' }
+Plug 'fatih/vim-go', { 'do': ':GoUpdateBinaries' }
 Plug 'HerringtonDarkholme/yats'
 Plug 'hrsh7th/cmp-buffer'
 Plug 'hrsh7th/cmp-nvim-lsp'
 Plug 'hrsh7th/nvim-cmp'
 Plug 'majutsushi/tagbar'
+Plug 'mfussenegger/nvim-dap'
+Plug 'mfussenegger/nvim-dap-python'
 Plug 'neovim/nvim-lspconfig'
 Plug 'nvim-treesitter/nvim-treesitter', {'do': ':TSUpdate'}
 Plug 'quangnguyen30192/cmp-nvim-ultisnips'
 Plug 'Raimondi/delimitMate'
 Plug 'riannucci/vim-python-pep8-indent'
-Plug 'sebdah/vim-delve'
 Plug 'SirVer/ultisnips'
 Plug 'tpope/vim-fugitive'
 Plug 'tpope/vim-repeat'
@@ -64,13 +63,9 @@ nmap <leader>t :TagbarToggle<CR>
 let g:delimitMate_expand_space = 1
 let g:delimitMate_expand_cr = 1
 
-"ale
-let g:ale_sign_error = "✗"
-let g:ale_sign_warning = "⚠"
-nmap <silent> <leader>e :ALENext<cr>
-nmap <silent> <leader>E :ALEPrevious<cr>
-
 autocmd FileType gitcommit set tw=68 spell
+
+
 
 " lsp config
 lua <<EOF
@@ -116,20 +111,38 @@ lua <<EOF
       buf_set_keymap('n', '<space>', '<cmd>lua vim.lsp.buf.definition()<CR>', opts)
       buf_set_keymap('n', '<S-space>', '<cmd>lua vim.lsp.buf.declaration()<CR>', opts)
       buf_set_keymap('n', '<C-space>', '<cmd>lua vim.lsp.buf.type_definition()<CR>', opts)
+      buf_set_keymap('n', '<leader>t', '<cmd>lua vim.lsp.buf.code_action()<CR>', opts)
+      buf_set_keymap('n', '<leader>f', '<cmd>lua vim.lsp.buf.format()<CR>', opts)
     end,
     capabilities = require('cmp_nvim_lsp').default_capabilities(vim.lsp.protocol.make_client_capabilities()),
     settings = { gopls =  {
       env = {CGO_ENABLED="0"}
     }}
   }
+
+  require('lspconfig')['pyright'].setup {
+    on_attach = function(client, bufnr)
+      local function buf_set_keymap(...) vim.api.nvim_buf_set_keymap(bufnr, ...) end
+      local function buf_set_option(...) vim.api.nvim_buf_set_option(bufnr, ...) end
+
+      -- Enable completion triggered by <c-x><c-o>
+      buf_set_option('omnifunc', 'v:lua.vim.lsp.omnifunc')
+
+      -- Mappings.
+      local opts = { noremap=true, silent=true }
+
+      -- See `:help vim.lsp.*` for documentation on any of the below functions
+      buf_set_keymap('n', '<space>', '<cmd>lua vim.lsp.buf.definition()<CR>', opts)
+      buf_set_keymap('n', '<S-space>', '<cmd>lua vim.lsp.buf.declaration()<CR>', opts)
+      buf_set_keymap('n', '<C-space>', '<cmd>lua vim.lsp.buf.type_definition()<CR>', opts)
+    end,
+    capabilities = require('cmp_nvim_lsp').default_capabilities(vim.lsp.protocol.make_client_capabilities()),
+  }
 EOF
 
 
 set background=dark
 colorscheme hybrid
-
-highlight! link ALEVirtualTextError Error
-highlight! link ALEVirtualTextWarning Todo
 
 " Set 5 lines to the cursor - when moving vertically
 set scrolloff=5
@@ -247,9 +260,6 @@ set smartcase
 set showmatch
 set gdefault
 
-" Don't jump when using * for search
-nnoremap * *<c-o>
-
 " Keep search matches in the middle of the window.
 nnoremap n nzzzv
 nnoremap N Nzzzv
@@ -283,70 +293,6 @@ if !exists('bclose_multiple')
   let bclose_multiple = 1
 endif
 
-" Display an error message.
-function! s:Warn(msg)
-  echohl ErrorMsg
-  echomsg a:msg
-  echohl NONE
-endfunction
-
-" Command ':Bclose' executes ':bd' to delete buffer in current window.
-" The window will show the alternate buffer (Ctrl-^) if it exists,
-" or the previous buffer (:bp), or a blank buffer if no previous.
-" Command ':Bclose!' is the same, but executes ':bd!' (discard changes).
-" An optional argument can specify which buffer to close (name or number).
-function! s:Bclose(bang, buffer)
-  if empty(a:buffer)
-    let btarget = bufnr('%')
-  elseif a:buffer =~ '^\d\+$'
-    let btarget = bufnr(str2nr(a:buffer))
-  else
-    let btarget = bufnr(a:buffer)
-  endif
-  if btarget < 0
-    call s:Warn('No matching buffer for '.a:buffer)
-    return
-  endif
-  if empty(a:bang) && getbufvar(btarget, '&modified')
-    call s:Warn('No write since last change for buffer '.btarget.' (use :Bclose!)')
-    return
-  endif
-  " Numbers of windows that view target buffer which we will delete.
-  let wnums = filter(range(1, winnr('$')), 'winbufnr(v:val) == btarget')
-  if !g:bclose_multiple && len(wnums) > 1
-    call s:Warn('Buffer is in multiple windows (use ":let bclose_multiple=1")')
-    return
-  endif
-  let wcurrent = winnr()
-  for w in wnums
-    execute w.'wincmd w'
-    let prevbuf = bufnr('#')
-    if prevbuf > 0 && buflisted(prevbuf) && prevbuf != w
-      buffer #
-    else
-      bprevious
-    endif
-    if btarget == bufnr('%')
-      " Numbers of listed buffers which are not the target to be deleted.
-      let blisted = filter(range(1, bufnr('$')), 'buflisted(v:val) && v:val != btarget')
-      " Listed, not target, and not displayed.
-      let bhidden = filter(copy(blisted), 'bufwinnr(v:val) < 0')
-      " Take the first buffer, if any (could be more intelligent).
-      let bjump = (bhidden + blisted + [-1])[0]
-      if bjump > 0
-        execute 'buffer '.bjump
-      else
-        execute 'enew'.a:bang
-      endif
-    endif
-  endfor
-  execute 'bdelete'.a:bang.' '.btarget
-  execute wcurrent.'wincmd w'
-endfunction
-command! -bang -complete=buffer -nargs=? Bclose call s:Bclose('<bang>', '<args>')
-nnoremap <silent> <Leader>bd :Bclose<CR>
-
-
 " Tagbar mapping interferes with Align
 nunmap <Leader>t
 nmap   <Leader>, :TagbarToggle<CR>
@@ -370,13 +316,6 @@ let g:ctrlp_custom_ignore = '\.pyc$'
 " Strip tagfiles up to 64MB
 let g:autotagmaxTagsFileSize = 1024*1024*64
 
-" Go find first django_project and do the omnidance :)
-let s:proj_file=findfile(".django_project", ';')
-if !empty(s:proj_file)
-  let $DJANGO_SETTINGS_MODULE=readfile(s:proj_file)[0]
-  python "sys.path.append(os.getcwd())"
-endif
-
 " Reset cursor to last pos in file
 function! ResCur()
   if line("'\"") <= line("$")
@@ -398,7 +337,7 @@ if has('win32')
 endif
 
 au! BufRead,BufNewFile *.ninja set filetype=ninja
-au! BufWritePost *.py,*.sh silent call s:FixExecutable()
+au! BufWritePost * silent call s:FixExecutable()
 function s:FixExecutable()
   if strpart(getline(1), 0, 2) == '#!'
     !chmod +x %
@@ -406,6 +345,9 @@ function s:FixExecutable()
     !chmod -x %
   endif
 endfunction
+
+" turn on automatic text wrapping for git commit files.
+au FileType gitcommit setlocal fo+=t
 
 au FileType python setlocal ts=2 sts=2 sw=2
 
@@ -432,21 +374,30 @@ command Banner call Banner()
 
 vmap <silent> R :sort i<cr>
 
-function! OutputSplitWindow(...)
-  " this function output the result of the Ex command into a split scratch buffer
-  let cmd = join(a:000, ' ')
-  let temp_reg = @"
-  redir @"
-  silent! execute cmd
-  redir END
-  let output = copy(@")
-  let @" = temp_reg
-  if empty(output)
-    echoerr "no output"
-  else
-    new
-    setlocal buftype=nofile bufhidden=wipe noswapfile nobuflisted
-    put! =output
-  endif
-endfunction
-command! -nargs=+ -complete=command Output call OutputSplitWindow(<f-args>)
+lua <<EOF
+  vim.keymap.set("n", "[g", vim.diagnostic.goto_prev)
+
+  local M = {}
+
+  M.pos_equal = function (p1, p2)
+    local r1, c1 = unpack(p1)
+    local r2, c2 = unpack(p2)
+    return r1 == r2 and c1 == c2
+  end
+
+  M.goto_error_then_hint = function ()
+    local pos = vim.api.nvim_win_get_cursor(0)
+    vim.diagnostic.goto_next( {severity=vim.diagnostic.severity.ERROR, wrap = true} )
+    local pos2 = vim.api.nvim_win_get_cursor(0)
+    if ( M.pos_equal(pos, pos2)) then
+      vim.diagnostic.goto_next( {wrap = true} )
+    end
+  end
+
+  vim.keymap.set("n", "]g", M.goto_error_then_hint)
+  vim.keymap.set("n", "]G", vim.diagnostic.goto_next)
+EOF
+
+if executable('rg')
+	set grepprg=rg\ --vimgrep\ --hidden\ --glob\ '!.git'
+endif
