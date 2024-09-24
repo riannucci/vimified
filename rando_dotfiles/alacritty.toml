@@ -26,3 +26,7 @@ style = "Book"
 
 [selection]
 save_to_clipboard = true
+
+[shell]
+program = "/usr/bin/login"
+args = ["-fp", "iannucci"]
