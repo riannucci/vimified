@@ -166,8 +166,6 @@ set cinoptions=:0,(s,u0,U1,g0,t0
 set hidden
 set list
 
-set lazyredraw
-
 " Disable the macvim toolbar
 set guioptions-=T
 
